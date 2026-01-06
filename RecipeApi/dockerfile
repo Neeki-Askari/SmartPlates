@@ -1,0 +1,18 @@
+# Was: mcr.microsoft.com/dotnet/sdk:8.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+
+# psql client for drop/create; dotnet-ef for migrations
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+WORKDIR /src/RecipeApi
+COPY RecipeApi/*.csproj ./
+RUN dotnet restore
+
+COPY RecipeApi/. ./
+
+WORKDIR /app
+COPY RecipeApi/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8080
