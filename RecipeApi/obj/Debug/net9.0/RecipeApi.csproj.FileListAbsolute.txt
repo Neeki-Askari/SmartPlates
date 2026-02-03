@@ -275,3 +275,16 @@
 /Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/obj/Debug/net9.0/RecipeApi.csproj.Up2Date
 /Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/obj/Debug/net9.0/RecipeApi.genruntimeconfig.cache
 /Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/obj/Debug/net9.0/ref/RecipeApi.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/obj/Debug/net9.0/RecipeApi.sourcelink.json
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/DotNetEnv.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Sprache.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/BCrypt.Net-Next.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.Google.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/neekiaskari/Desktop/MealPlanApp/RecipeApi/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll

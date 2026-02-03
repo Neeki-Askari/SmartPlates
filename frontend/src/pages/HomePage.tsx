@@ -1,8 +1,26 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Container } from '../components/layout/Container';
 import { Card, CardContent } from '../components/ui';
+import { LoginModal } from '../components/common/LoginModal';
 
 export const HomePage = () => {
+  const { isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState('');
+
+  const handleProtectedFeatureClick = (e: React.MouseEvent, featureName: string, path: string) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      setSelectedFeature(featureName);
+      setLoginModalOpen(true);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
     <Container>
       <div className="text-center mb-12">
@@ -41,7 +59,7 @@ export const HomePage = () => {
           </Card>
         </Link>
 
-        <Link to="/mealplans">
+        <div onClick={(e) => handleProtectedFeatureClick(e, 'Meal Planning', '/mealplans')} className="cursor-pointer">
           <Card hover padding="lg" className="h-full">
             <CardContent className="text-center">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -63,11 +81,16 @@ export const HomePage = () => {
               <p className="text-neutral-600">
                 Plan your weekly meals, randomize recipes based on preferences, and track what you cook.
               </p>
+              {!isAuthenticated && (
+                <span className="inline-block mt-2 px-3 py-1 text-xs font-medium text-primary-700 bg-primary-50 rounded-full">
+                  Login Required
+                </span>
+              )}
             </CardContent>
           </Card>
-        </Link>
+        </div>
 
-        <Link to="/shopping">
+        <div onClick={(e) => handleProtectedFeatureClick(e, 'Shopping Lists', '/grocery-lists')} className="cursor-pointer">
           <Card hover padding="lg" className="h-full">
             <CardContent className="text-center">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -89,9 +112,14 @@ export const HomePage = () => {
               <p className="text-neutral-600">
                 Generate shopping lists from your meal plans with quantities, costs, and calories calculated automatically.
               </p>
+              {!isAuthenticated && (
+                <span className="inline-block mt-2 px-3 py-1 text-xs font-medium text-primary-700 bg-primary-50 rounded-full">
+                  Login Required
+                </span>
+              )}
             </CardContent>
           </Card>
-        </Link>
+        </div>
       </div>
 
       <div className="mt-12 text-center">
@@ -102,6 +130,12 @@ export const HomePage = () => {
           Get Started
         </Link>
       </div>
+
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        featureName={selectedFeature}
+      />
     </Container>
   );
 };

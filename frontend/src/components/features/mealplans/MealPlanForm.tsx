@@ -9,16 +9,7 @@ interface MealPlanFormProps {
 }
 
 export const MealPlanForm = ({ userId, onSubmit, onCancel }: MealPlanFormProps) => {
-  const [name, setName] = useState('');
-  const [servingSize, setServingSize] = useState(2);
-  const [includesBreakfast, setIncludesBreakfast] = useState(true);
-  const [includesSnack1, setIncludesSnack1] = useState(false);
-  const [includesLunch, setIncludesLunch] = useState(true);
-  const [includesSnack2, setIncludesSnack2] = useState(false);
-  const [includesDinner, setIncludesDinner] = useState(true);
-  const [includesSnack3, setIncludesSnack3] = useState(false);
-
-  // Calculate start date (next Sunday) and end date (following Saturday)
+  // Calculate default start date (next Sunday)
   const getNextSunday = () => {
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -29,18 +20,29 @@ export const MealPlanForm = ({ userId, onSubmit, onCancel }: MealPlanFormProps) 
     return nextSunday;
   };
 
+  const defaultStart = getNextSunday();
+  const defaultEnd = new Date(defaultStart);
+  defaultEnd.setDate(defaultStart.getDate() + 6);
+
+  const [name, setName] = useState('');
+  const [servingSize, setServingSize] = useState(2);
+  const [startDate, setStartDate] = useState(defaultStart.toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(defaultEnd.toISOString().split('T')[0]);
+  const [includesBreakfast, setIncludesBreakfast] = useState(true);
+  const [includesSnack1, setIncludesSnack1] = useState(false);
+  const [includesLunch, setIncludesLunch] = useState(true);
+  const [includesSnack2, setIncludesSnack2] = useState(false);
+  const [includesDinner, setIncludesDinner] = useState(true);
+  const [includesSnack3, setIncludesSnack3] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const startDate = getNextSunday();
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6); // Saturday
-
     const data: CreateMealPlanDto = {
       userId,
-      name: name || `Meal Plan ${startDate.toLocaleDateString()}`,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
+      name: name || `Meal Plan ${new Date(startDate).toLocaleDateString()}`,
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString(),
       servingSize,
       includesBreakfast,
       includesSnack1,
@@ -70,6 +72,34 @@ export const MealPlanForm = ({ userId, onSubmit, onCancel }: MealPlanFormProps) 
               placeholder="e.g., Weekly Meal Plan"
               fullWidth
             />
+          </div>
+
+          {/* Date Range */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Start Date
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                fullWidth
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                End Date
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                fullWidth
+                required
+              />
+            </div>
           </div>
 
           {/* Serving Size */}

@@ -5,7 +5,14 @@ namespace Recipe.Api.Models;
 public record UserDto(Guid Id, string Email, string DisplayName, DateTime CreatedAt);
 public record CreateUserDto(string Email, string DisplayName, string? Password);
 public record UpdateUserDto(string DisplayName, string? Password);
+
+// ===== AUTHENTICATION DTOs =====
+public record RegisterDto(string Email, string DisplayName, string Password);
 public record LoginDto(string Email, string Password);
+public record AuthResponseDto(string AccessToken, string RefreshToken, UserDto User);
+public record RefreshTokenDto(string RefreshToken);
+public record OAuthCallbackDto(string Code, string State);
+public record ChangePasswordDto(string CurrentPassword, string NewPassword);
 
 // ===== INGREDIENT DTOs =====
 public record IngredientInput(
@@ -138,6 +145,8 @@ public record CreateMealPlanDto(
 
 public record UpdateMealPlanDto(
     string Name,
+    DateTime StartDate,
+    DateTime EndDate,
     int ServingSize,
     bool IncludesBreakfast,
     bool IncludesSnack1,
@@ -145,6 +154,38 @@ public record UpdateMealPlanDto(
     bool IncludesSnack2,
     bool IncludesDinner,
     bool IncludesSnack3
+);
+
+public record DuplicateMealPlanDto(
+    Guid SourceMealPlanId,
+    string Name,
+    DateTime StartDate,
+    DateTime EndDate,
+    int ServingSize,
+    bool IncludesBreakfast,
+    bool IncludesSnack1,
+    bool IncludesLunch,
+    bool IncludesSnack2,
+    bool IncludesDinner,
+    bool IncludesSnack3
+);
+
+public record MealPlanSummaryDto(
+    Guid Id,
+    Guid UserId,
+    string Name,
+    DateTime StartDate,
+    DateTime EndDate,
+    int ServingSize,
+    bool IncludesBreakfast,
+    bool IncludesSnack1,
+    bool IncludesLunch,
+    bool IncludesSnack2,
+    bool IncludesDinner,
+    bool IncludesSnack3,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    int RecipeCount
 );
 
 public record MealPlanDto(
@@ -245,4 +286,30 @@ public record ShoppingListDto(
     IReadOnlyList<ShoppingListItemDto> Items,
     decimal TotalEstimatedCost,
     decimal TotalCalories
+);
+
+public record SavedShoppingListDto(
+    Guid Id,
+    Guid MealPlanId,
+    Guid UserId,
+    string MealPlanName,
+    DateTime StartDate,
+    DateTime EndDate,
+    int ServingSize,
+    IReadOnlyList<ShoppingListItemDto> Items,
+    decimal TotalEstimatedCost,
+    decimal TotalCalories,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
+public record SavedShoppingListSummaryDto(
+    Guid Id,
+    Guid MealPlanId,
+    string MealPlanName,
+    DateTime StartDate,
+    DateTime EndDate,
+    int ItemCount,
+    decimal TotalEstimatedCost,
+    DateTime CreatedAt
 );

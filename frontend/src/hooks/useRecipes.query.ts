@@ -25,7 +25,6 @@ export const useRecipes = (params?: GetAllRecipesParams) => {
       const data = await recipeApi.getAllRecipes(params);
       return data;
     },
-    enabled: !!params?.userId, // Only fetch if userId is provided
   });
 };
 

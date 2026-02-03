@@ -45,7 +45,7 @@ export const RecipeSelector = ({
             <h2 className="text-2xl font-bold text-neutral-900">{title}</h2>
             <button
               onClick={onClose}
-              className="text-neutral-400 hover:text-neutral-600 transition-colors"
+              className="text-neutral-400 hover:text-neutral-600 transition-colors cursor-pointer"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -101,7 +101,7 @@ export const RecipeSelector = ({
                 <button
                   key={recipe.id}
                   onClick={() => handleSelect(recipe)}
-                  className="w-full text-left p-4 bg-white hover:bg-primary-50 border border-neutral-200 hover:border-primary-300 rounded-lg transition-colors"
+                  className="w-full text-left p-4 bg-white hover:bg-primary-50 border border-neutral-200 hover:border-primary-300 rounded-lg transition-colors cursor-pointer"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

@@ -172,6 +172,51 @@ export interface CreateMealPlanDto {
   includesSnack3: boolean;
 }
 
+export interface UpdateMealPlanDto {
+  name: string;
+  startDate: string;
+  endDate: string;
+  servingSize: number;
+  includesBreakfast: boolean;
+  includesSnack1: boolean;
+  includesLunch: boolean;
+  includesSnack2: boolean;
+  includesDinner: boolean;
+  includesSnack3: boolean;
+}
+
+export interface DuplicateMealPlanDto {
+  sourceMealPlanId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  servingSize: number;
+  includesBreakfast: boolean;
+  includesSnack1: boolean;
+  includesLunch: boolean;
+  includesSnack2: boolean;
+  includesDinner: boolean;
+  includesSnack3: boolean;
+}
+
+export interface MealPlanSummary {
+  id: string;
+  userId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  servingSize: number;
+  includesBreakfast: boolean;
+  includesSnack1: boolean;
+  includesLunch: boolean;
+  includesSnack2: boolean;
+  includesDinner: boolean;
+  includesSnack3: boolean;
+  createdAt: string;
+  updatedAt: string;
+  recipeCount: number;
+}
+
 export interface AddRecipeToMealPlanDto {
   mealPlanId: string;
   recipeId: string;
@@ -207,6 +252,32 @@ export interface ShoppingList {
   items: ShoppingListItem[];
   totalEstimatedCost: number;
   totalCalories: number;
+}
+
+export interface SavedShoppingList {
+  id: string;
+  mealPlanId: string;
+  userId: string;
+  mealPlanName: string;
+  startDate: string;
+  endDate: string;
+  servingSize: number;
+  items: ShoppingListItem[];
+  totalEstimatedCost: number;
+  totalCalories: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedShoppingListSummary {
+  id: string;
+  mealPlanId: string;
+  mealPlanName: string;
+  startDate: string;
+  endDate: string;
+  itemCount: number;
+  totalEstimatedCost: number;
+  createdAt: string;
 }
 
 // Shared Recipe types

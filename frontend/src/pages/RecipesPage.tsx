@@ -8,24 +8,28 @@ import {
   useRecipes,
   useRecipe,
   useCreateRecipe,
+  useUpdateRecipe,
   useDeleteRecipe,
 } from '../hooks/useRecipes.query';
 import { RecipeForm } from '../components/features/recipes/RecipeForm';
 import { RecipeDetail } from '../components/features/recipes/RecipeDetail';
 import { RecipeCard } from '../components/features/recipes/RecipeCard';
 import { CUISINE_TYPES, HEALTH_RATINGS } from '../types';
-import { DEMO_USER_ID } from '../constants';
+import { useUser } from '../contexts/UserContext';
 
 export const RecipesPage = () => {
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('');
   const [healthFilter, setHealthFilter] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'lastCooked' | 'createdAt'>('createdAt');
   const [showForm, setShowForm] = useState(false);
+  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+  const [showMyRecipesOnly, setShowMyRecipesOnly] = useState(true);
 
-  // TODO: Replace with actual user ID from auth context
-  const userId = DEMO_USER_ID;
+  // Get user ID from synced user (this is the database Guid)
+  const userId = user?.id;
 
   // React Query hooks
   const {
@@ -34,7 +38,7 @@ export const RecipesPage = () => {
     error: queryError,
     refetch,
   } = useRecipes({
-    userId,
+    userId: showMyRecipesOnly ? userId : undefined,
     searchTerm: searchTerm || undefined,
     cuisineType: cuisineFilter || undefined,
     healthRating: healthFilter || undefined,
@@ -43,7 +47,9 @@ export const RecipesPage = () => {
   });
 
   const { data: selectedRecipe, isLoading: recipeLoading } = useRecipe(selectedRecipeId);
+  const { data: editingRecipe, isLoading: editingRecipeLoading } = useRecipe(editingRecipeId);
   const createRecipeMutation = useCreateRecipe();
+  const updateRecipeMutation = useUpdateRecipe();
   const deleteRecipeMutation = useDeleteRecipe();
 
   const error = queryError ? String(queryError) : null;
@@ -53,6 +59,13 @@ export const RecipesPage = () => {
     setShowForm(false);
   };
 
+  const handleUpdateRecipe = async (data: any) => {
+    if (editingRecipeId) {
+      await updateRecipeMutation.mutateAsync({ id: editingRecipeId, data });
+      setEditingRecipeId(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (selectedRecipeId) {
       await deleteRecipeMutation.mutateAsync(selectedRecipeId);
@@ -60,11 +73,45 @@ export const RecipesPage = () => {
     }
   };
 
+  const handleEdit = (recipeId: string) => {
+    setEditingRecipeId(recipeId);
+    setSelectedRecipeId(null);
+    setShowForm(false);
+  };
+
   return (
     <Container>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">Recipe Library</h1>
-        <p className="text-neutral-600">Manage and organize all your recipes in one place</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-neutral-900 mb-2">Recipe Library</h1>
+            <p className="text-neutral-600">Manage and organize all your recipes in one place</p>
+          </div>
+
+          {/* Toggle between My Recipes and All Recipes */}
+          <div className="flex items-center bg-neutral-100 rounded-lg p-1">
+            <button
+              onClick={() => setShowMyRecipesOnly(true)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                showMyRecipesOnly
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              My Recipes
+            </button>
+            <button
+              onClick={() => setShowMyRecipesOnly(false)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                !showMyRecipesOnly
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              All Recipes
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -143,12 +190,21 @@ export const RecipesPage = () => {
         </div>
       )}
 
-      {/* Recipe Form Modal */}
+      {/* Create Recipe Form Modal */}
       <RecipeForm
         isOpen={showForm}
         onClose={() => setShowForm(false)}
         onSubmit={handleCreateRecipe}
         userId={userId}
+      />
+
+      {/* Edit Recipe Form Modal */}
+      <RecipeForm
+        isOpen={!!editingRecipeId && !editingRecipeLoading}
+        onClose={() => setEditingRecipeId(null)}
+        onSubmit={handleUpdateRecipe}
+        userId={userId}
+        recipe={editingRecipe}
       />
 
       {/* Recipe Detail Modal */}
@@ -157,6 +213,7 @@ export const RecipesPage = () => {
         onClose={() => setSelectedRecipeId(null)}
         recipe={selectedRecipe}
         onDelete={handleDelete}
+        onEdit={() => selectedRecipeId && handleEdit(selectedRecipeId)}
       />
     </Container>
   );

@@ -1,24 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Container } from '../components/layout/Container';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
 import { MealPlanForm } from '../components/features/mealplans/MealPlanForm';
 import { MealPlanWeekView } from '../components/features/mealplans/MealPlanWeekView';
 import { ShoppingListView } from '../components/features/mealplans/ShoppingListView';
-import { useCreateMealPlan, useMealPlan, useShoppingList } from '../hooks/useMealPlans.query';
+import { MealPlanEditModal } from '../components/features/mealplans/MealPlanEditModal';
+import { MealPlanDuplicateModal } from '../components/features/mealplans/MealPlanDuplicateModal';
+import { useCreateMealPlan, useMealPlan, useUserMealPlans, useUpdateMealPlan, useDuplicateMealPlan, useDeleteMealPlan, useShoppingList } from '../hooks/useMealPlans.query';
 import { DEMO_USER_ID } from '../constants';
-import type { CreateMealPlanDto } from '../types';
+import type { CreateMealPlanDto, UpdateMealPlanDto, DuplicateMealPlanDto } from '../types';
 
 export const MealPlansPage = () => {
+  const location = useLocation();
   const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(null);
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showEditMealPlan, setShowEditMealPlan] = useState(false);
+  const [showDuplicateMealPlan, setShowDuplicateMealPlan] = useState(false);
 
   // TODO: Replace with actual user ID from auth context
   const userId = DEMO_USER_ID;
 
+  // Reset to meal plans list when navigating to /mealplans
+  useEffect(() => {
+    if (location.pathname === '/mealplans') {
+      setCurrentMealPlanId(null);
+      setShowShoppingList(false);
+      setShowForm(false);
+      setShowEditMealPlan(false);
+      setShowDuplicateMealPlan(false);
+    }
+  }, [location.pathname]);
+
   // React Query hooks
   const createMealPlanMutation = useCreateMealPlan();
+  const updateMealPlanMutation = useUpdateMealPlan();
+  const duplicateMealPlanMutation = useDuplicateMealPlan();
+  const deleteMealPlanMutation = useDeleteMealPlan();
   const { data: mealPlan, isLoading: mealPlanLoading } = useMealPlan(currentMealPlanId);
+  const { data: userMealPlans, isLoading: mealPlansListLoading } = useUserMealPlans(userId);
   const { data: shoppingList, isLoading: shoppingListLoading } = useShoppingList(
     showShoppingList ? currentMealPlanId : null
   );
@@ -43,17 +64,87 @@ export const MealPlansPage = () => {
     setShowForm(true);
   };
 
+  const handleSelectMealPlan = (id: string) => {
+    setCurrentMealPlanId(id);
+    setShowShoppingList(false);
+    setShowForm(false);
+  };
+
+  const handleDeleteMealPlan = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this meal plan?')) return;
+
+    try {
+      await deleteMealPlanMutation.mutateAsync(id);
+      if (currentMealPlanId === id) {
+        setCurrentMealPlanId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting meal plan:', error);
+    }
+  };
+
+  const handleUpdateMealPlan = async (data: UpdateMealPlanDto) => {
+    if (!currentMealPlanId) return;
+
+    try {
+      await updateMealPlanMutation.mutateAsync({ id: currentMealPlanId, data });
+      setShowEditMealPlan(false);
+    } catch (error) {
+      console.error('Error updating meal plan:', error);
+    }
+  };
+
+  const handleDuplicateMealPlan = async (data: DuplicateMealPlanDto) => {
+    try {
+      const duplicatedMealPlan = await duplicateMealPlanMutation.mutateAsync(data);
+      setShowDuplicateMealPlan(false);
+      setCurrentMealPlanId(duplicatedMealPlan.id);
+    } catch (error) {
+      console.error('Error duplicating meal plan:', error);
+    }
+  };
+
   // Show meal plan week view if one is selected
   if (currentMealPlanId && mealPlan && !showShoppingList) {
     return (
       <Container maxWidth="full">
+        {/* Meal Plan Info Header */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-neutral-900 mb-2">{mealPlan.name}</h2>
+                <div className="flex gap-6 text-sm text-neutral-600">
+                  <div>
+                    <span className="font-medium">Date Range:</span>{' '}
+                    {new Date(mealPlan.startDate).toLocaleDateString()} -{' '}
+                    {new Date(mealPlan.endDate).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Serving Size:</span> {mealPlan.servingSize} people
+                  </div>
+                  <div>
+                    <span className="font-medium">Recipes:</span> {mealPlan.mealPlanRecipes?.length || 0}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => setShowDuplicateMealPlan(true)}>
+                  Duplicate
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowEditMealPlan(true)}>
+                  Edit Details
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
         <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900 mb-2">Meal Plan</h1>
-            <p className="text-neutral-600">
-              Plan your meals for the week and randomize options
-            </p>
-          </div>
+          <Button variant="secondary" onClick={() => setCurrentMealPlanId(null)}>
+            ← Back to Meal Plans
+          </Button>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={handleNewMealPlan}>
               New Meal Plan
@@ -65,6 +156,24 @@ export const MealPlansPage = () => {
         </div>
 
         <MealPlanWeekView mealPlan={mealPlan} />
+
+        {/* Edit Meal Plan Modal */}
+        <MealPlanEditModal
+          isOpen={showEditMealPlan}
+          onClose={() => setShowEditMealPlan(false)}
+          onSubmit={handleUpdateMealPlan}
+          mealPlan={mealPlan}
+          isLoading={updateMealPlanMutation.isPending}
+        />
+
+        {/* Duplicate Meal Plan Modal */}
+        <MealPlanDuplicateModal
+          isOpen={showDuplicateMealPlan}
+          onClose={() => setShowDuplicateMealPlan(false)}
+          onSubmit={handleDuplicateMealPlan}
+          sourceMealPlan={mealPlan}
+          isLoading={duplicateMealPlanMutation.isPending}
+        />
       </Container>
     );
   }
@@ -155,7 +264,7 @@ export const MealPlansPage = () => {
     );
   }
 
-  // Default view - empty state
+  // Default view - list saved meal plans or empty state
   return (
     <Container>
       <div className="mb-8">
@@ -165,33 +274,100 @@ export const MealPlansPage = () => {
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <p className="text-neutral-600">Select or create a meal plan to get started</p>
+          <p className="text-neutral-600">
+            {userMealPlans && userMealPlans.length > 0
+              ? `You have ${userMealPlans.length} saved meal plan${userMealPlans.length > 1 ? 's' : ''}`
+              : 'Select or create a meal plan to get started'}
+          </p>
         </div>
         <Button onClick={() => setShowForm(true)}>+ Create New Meal Plan</Button>
       </div>
 
-      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-neutral-300">
-        <div className="max-w-md mx-auto">
-          <svg
-            className="w-16 h-16 text-neutral-400 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <h3 className="text-lg font-semibold text-neutral-900 mb-2">No Meal Plans Yet</h3>
-          <p className="text-neutral-600 mb-4">
-            Create your first meal plan to organize your weekly meals.
-          </p>
-          <Button onClick={() => setShowForm(true)}>+ Create Meal Plan</Button>
+      {mealPlansListLoading ? (
+        <div className="text-center py-12">
+          <p className="text-neutral-600">Loading meal plans...</p>
         </div>
-      </div>
+      ) : userMealPlans && userMealPlans.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {userMealPlans.map((plan) => (
+            <Card key={plan.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1" onClick={() => handleSelectMealPlan(plan.id)}>
+                    <CardTitle className="text-lg mb-1">{plan.name}</CardTitle>
+                    <p className="text-sm text-neutral-500">
+                      {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteMealPlan(plan.id);
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent onClick={() => handleSelectMealPlan(plan.id)}>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Serving Size:</span>
+                    <span className="font-medium">{plan.servingSize} people</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Recipes:</span>
+                    <span className="font-medium">{plan.recipeCount}</span>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <p className="text-neutral-600 mb-1">Meals included:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {plan.includesBreakfast && (
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">Breakfast</span>
+                      )}
+                      {plan.includesLunch && (
+                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">Lunch</span>
+                      )}
+                      {plan.includesDinner && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Dinner</span>
+                      )}
+                      {(plan.includesSnack1 || plan.includesSnack2 || plan.includesSnack3) && (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Snacks</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-neutral-300">
+          <div className="max-w-md mx-auto">
+            <svg
+              className="w-16 h-16 text-neutral-400 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2">No Meal Plans Yet</h3>
+            <p className="text-neutral-600 mb-4">
+              Create your first meal plan to organize your weekly meals.
+            </p>
+            <Button onClick={() => setShowForm(true)}>+ Create Meal Plan</Button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

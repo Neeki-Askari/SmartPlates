@@ -12,10 +12,15 @@ import type {
   Ingredient,
   MealPlan,
   MealPlanWithRecipes,
+  MealPlanSummary,
   CreateMealPlanDto,
+  UpdateMealPlanDto,
+  DuplicateMealPlanDto,
   AddRecipeToMealPlanDto,
   RandomizeRecipeDto,
   ShoppingList,
+  SavedShoppingList,
+  SavedShoppingListSummary,
   SharedRecipe,
   ShareRecipeDto,
   MealPlanRecipe,
@@ -30,6 +35,32 @@ const api = axios.create({
   },
 });
 
+// Store token getter function (will be set by App.tsx)
+let getAccessToken: (() => Promise<string>) | null = null;
+
+export const setTokenGetter = (tokenGetter: () => Promise<string>) => {
+  getAccessToken = tokenGetter;
+};
+
+// Add request interceptor to include Auth0 token
+api.interceptors.request.use(
+  async (config) => {
+    if (getAccessToken) {
+      try {
+        const token = await getAccessToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        // Token retrieval failed, continue without token
+        console.error('Failed to get access token:', error);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Error handler
 export const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -41,6 +72,12 @@ export const handleApiError = (error: unknown): string => {
     );
   }
   return "An unexpected error occurred";
+};
+
+// ===== AUTH API =====
+export const authApi = {
+  syncUser: () =>
+    api.post<User>("/auth/sync").then((res) => res.data),
 };
 
 // ===== USER API =====
@@ -102,6 +139,18 @@ export const mealPlanApi = {
   getMealPlan: (id: string) =>
     api.get<MealPlanWithRecipes>(`/mealplans/${id}`).then((res) => res.data),
 
+  getUserMealPlans: (userId: string) =>
+    api.get<MealPlanSummary[]>(`/users/${userId}/mealplans`).then((res) => res.data),
+
+  updateMealPlan: (id: string, data: UpdateMealPlanDto) =>
+    api.put<MealPlanSummary>(`/mealplans/${id}`, data).then((res) => res.data),
+
+  deleteMealPlan: (id: string) =>
+    api.delete(`/mealplans/${id}`),
+
+  duplicateMealPlan: (data: DuplicateMealPlanDto) =>
+    api.post<MealPlanWithRecipes>("/mealplans/duplicate", data).then((res) => res.data),
+
   addRecipeToMealPlan: (data: AddRecipeToMealPlanDto) =>
     api
       .post<MealPlanRecipe>("/mealplans/add-recipe", data)
@@ -114,6 +163,21 @@ export const mealPlanApi = {
     api
       .get<ShoppingList>(`/mealplans/${mealPlanId}/shopping-list`)
       .then((res) => res.data),
+};
+
+// ===== SHOPPING LIST API =====
+export const shoppingListApi = {
+  saveShoppingList: (shoppingList: ShoppingList) =>
+    api.post<SavedShoppingList>("/shopping-lists/save", shoppingList).then((res) => res.data),
+
+  getUserShoppingLists: (userId: string) =>
+    api.get<SavedShoppingListSummary[]>(`/users/${userId}/shopping-lists`).then((res) => res.data),
+
+  getSavedShoppingList: (id: string) =>
+    api.get<SavedShoppingList>(`/shopping-lists/${id}`).then((res) => res.data),
+
+  deleteSavedShoppingList: (id: string) =>
+    api.delete(`/shopping-lists/${id}`),
 };
 
 // ===== SHARED RECIPES API =====

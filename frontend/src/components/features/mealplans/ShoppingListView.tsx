@@ -1,12 +1,27 @@
 import { Card, CardContent, Button } from '../../ui';
+import { useSaveShoppingList } from '../../../hooks/useShoppingLists.query';
 import type { ShoppingList } from '../../../types';
 
 interface ShoppingListViewProps {
   shoppingList: ShoppingList;
   onClose?: () => void;
+  onSave?: () => void;
 }
 
-export const ShoppingListView = ({ shoppingList, onClose }: ShoppingListViewProps) => {
+export const ShoppingListView = ({ shoppingList, onClose, onSave }: ShoppingListViewProps) => {
+  const saveShoppingListMutation = useSaveShoppingList();
+
+  const handleSave = async () => {
+    try {
+      await saveShoppingListMutation.mutateAsync(shoppingList);
+      if (onSave) {
+        onSave();
+      }
+    } catch (error) {
+      console.error('Error saving shopping list:', error);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -53,6 +68,13 @@ export const ShoppingListView = ({ shoppingList, onClose }: ShoppingListViewProp
               </p>
             </div>
             <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saveShoppingListMutation.isPending}
+              >
+                {saveShoppingListMutation.isPending ? 'Saving...' : 'Save List'}
+              </Button>
               <Button variant="secondary" size="sm" onClick={handlePrint}>
                 Print
               </Button>
@@ -66,6 +88,24 @@ export const ShoppingListView = ({ shoppingList, onClose }: ShoppingListViewProp
               )}
             </div>
           </div>
+
+          {/* Success message */}
+          {saveShoppingListMutation.isSuccess && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                Shopping list saved successfully!
+              </p>
+            </div>
+          )}
+
+          {/* Error message */}
+          {saveShoppingListMutation.isError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">
+                Error saving shopping list. Please try again.
+              </p>
+            </div>
+          )}
 
           {/* Items Table */}
           <div className="overflow-x-auto">

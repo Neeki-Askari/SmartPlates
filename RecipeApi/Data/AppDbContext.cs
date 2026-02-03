@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MealPlan> MealPlans => Set<MealPlan>();
     public DbSet<MealPlanRecipe> MealPlanRecipes => Set<MealPlanRecipe>();
     public DbSet<SharedRecipe> SharedRecipes => Set<SharedRecipe>();
+    public DbSet<SavedShoppingList> SavedShoppingLists => Set<SavedShoppingList>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +22,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(x => x.Email).IsRequired().HasMaxLength(200);
             b.HasIndex(x => x.Email).IsUnique();
             b.Property(x => x.DisplayName).IsRequired().HasMaxLength(120);
+            b.Property(x => x.Auth0SubjectId).HasMaxLength(200);
+            b.Property(x => x.PasswordHash).HasMaxLength(500);
+            b.Property(x => x.OAuthProvider).HasMaxLength(50);
+            b.Property(x => x.OAuthProviderId).HasMaxLength(200);
+            b.Property(x => x.RefreshToken).HasMaxLength(500);
+
+            // Create indexes for lookups
+            b.HasIndex(x => x.Auth0SubjectId).IsUnique();
+            b.HasIndex(x => new { x.OAuthProvider, x.OAuthProviderId });
 
             b.HasMany(x => x.Recipes)
              .WithOne(r => r.User)
@@ -108,6 +118,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany()
              .HasForeignKey(x => x.OriginalRecipeId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SavedShoppingList configuration
+        modelBuilder.Entity<SavedShoppingList>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.MealPlanName).IsRequired().HasMaxLength(200);
+            b.Property(x => x.ItemsJson).IsRequired();
+            b.Property(x => x.TotalEstimatedCost).HasPrecision(10, 2);
+            b.Property(x => x.TotalCalories).HasPrecision(10, 2);
+
+            b.HasOne(x => x.User)
+             .WithMany()
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne(x => x.MealPlan)
+             .WithMany()
+             .HasForeignKey(x => x.MealPlanId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            // Index for querying user's shopping lists
+            b.HasIndex(x => x.UserId);
+            b.HasIndex(x => x.MealPlanId);
         });
     }
 }

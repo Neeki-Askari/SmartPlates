@@ -108,7 +108,7 @@ export const MealSlot = ({
                 </div>
                 <button
                   onClick={handleClearRecipe}
-                  className="ml-2 text-neutral-400 hover:text-red-600 transition-colors"
+                  className="ml-2 text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
                   title="Clear recipe"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@ export const MealSlot = ({
                       <button
                         key={recipe.id}
                         onClick={() => handleSelectOption(recipe)}
-                        className="w-full text-left px-3 py-2 bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200 hover:border-primary-300 transition-colors"
+                        className="w-full text-left px-3 py-2 bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200 hover:border-primary-300 transition-colors cursor-pointer"
                       >
                         <div className="font-medium text-sm text-neutral-900">
                           {recipe.title}
