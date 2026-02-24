@@ -139,8 +139,8 @@ export const mealPlanApi = {
   getMealPlan: (id: string) =>
     api.get<MealPlanWithRecipes>(`/mealplans/${id}`).then((res) => res.data),
 
-  getUserMealPlans: (userId: string) =>
-    api.get<MealPlanSummary[]>(`/users/${userId}/mealplans`).then((res) => res.data),
+  getUserMealPlans: () =>
+    api.get<MealPlanSummary[]>(`/mealplans`).then((res) => res.data),
 
   updateMealPlan: (id: string, data: UpdateMealPlanDto) =>
     api.put<MealPlanSummary>(`/mealplans/${id}`, data).then((res) => res.data),
@@ -170,8 +170,8 @@ export const shoppingListApi = {
   saveShoppingList: (shoppingList: ShoppingList) =>
     api.post<SavedShoppingList>("/shopping-lists/save", shoppingList).then((res) => res.data),
 
-  getUserShoppingLists: (userId: string) =>
-    api.get<SavedShoppingListSummary[]>(`/users/${userId}/shopping-lists`).then((res) => res.data),
+  getUserShoppingLists: () =>
+    api.get<SavedShoppingListSummary[]>(`/shopping-lists`).then((res) => res.data),
 
   getSavedShoppingList: (id: string) =>
     api.get<SavedShoppingList>(`/shopping-lists/${id}`).then((res) => res.data),

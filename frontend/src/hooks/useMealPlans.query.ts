@@ -91,7 +91,7 @@ export const useUserMealPlans = (userId: string | null) => {
     queryFn: async () => {
       if (!userId) throw new Error('User ID is required');
       try {
-        return await mealPlanApi.getUserMealPlans(userId);
+        return await mealPlanApi.getUserMealPlans();
       } catch (error) {
         console.error('Error fetching meal plans:', error);
         return [];

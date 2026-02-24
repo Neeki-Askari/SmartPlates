@@ -8,7 +8,7 @@ import { ShoppingListView } from '../components/features/mealplans/ShoppingListV
 import { MealPlanEditModal } from '../components/features/mealplans/MealPlanEditModal';
 import { MealPlanDuplicateModal } from '../components/features/mealplans/MealPlanDuplicateModal';
 import { useCreateMealPlan, useMealPlan, useUserMealPlans, useUpdateMealPlan, useDuplicateMealPlan, useDeleteMealPlan, useShoppingList } from '../hooks/useMealPlans.query';
-import { DEMO_USER_ID } from '../constants';
+import { useUser } from '../contexts/UserContext';
 import type { CreateMealPlanDto, UpdateMealPlanDto, DuplicateMealPlanDto } from '../types';
 
 export const MealPlansPage = () => {
@@ -19,8 +19,8 @@ export const MealPlansPage = () => {
   const [showEditMealPlan, setShowEditMealPlan] = useState(false);
   const [showDuplicateMealPlan, setShowDuplicateMealPlan] = useState(false);
 
-  // TODO: Replace with actual user ID from auth context
-  const userId = DEMO_USER_ID;
+  const { user } = useUser();
+  const userId = user?.id ?? '';
 
   // Reset to meal plans list when navigating to /mealplans
   useEffect(() => {

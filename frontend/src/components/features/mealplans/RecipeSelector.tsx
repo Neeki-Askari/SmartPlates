@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card, CardContent, Input, Select } from '../../ui';
 import { useRecipes } from '../../../hooks/useRecipes.query';
 import { CUISINE_TYPES, HEALTH_RATINGS } from '../../../types';
-import { DEMO_USER_ID } from '../../../constants';
+import { useUser } from '../../../contexts/UserContext';
 import type { Recipe } from '../../../types';
 
 interface RecipeSelectorProps {
@@ -18,12 +18,13 @@ export const RecipeSelector = ({
   onSelect,
   title = 'Select a Recipe',
 }: RecipeSelectorProps) => {
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('');
   const [healthFilter, setHealthFilter] = useState('');
 
   const { data: recipes = [], isLoading } = useRecipes({
-    userId: DEMO_USER_ID,
+    userId: user?.id ?? '',
     searchTerm: searchTerm || undefined,
     cuisineType: cuisineFilter || undefined,
     healthRating: healthFilter || undefined,

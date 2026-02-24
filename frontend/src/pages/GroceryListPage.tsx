@@ -3,11 +3,12 @@ import { Container } from '../components/layout/Container';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
 import { ShoppingListView } from '../components/features/mealplans/ShoppingListView';
 import { useUserShoppingLists, useSavedShoppingList, useDeleteShoppingList } from '../hooks/useShoppingLists.query';
-import { DEMO_USER_ID } from '../constants';
+import { useUser } from '../contexts/UserContext';
 
 export const GroceryListPage = () => {
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
-  const userId = DEMO_USER_ID;
+  const { user } = useUser();
+  const userId = user?.id ?? '';
 
   const { data: savedLists, isLoading: listsLoading } = useUserShoppingLists(userId);
   const { data: selectedList, isLoading: listLoading } = useSavedShoppingList(selectedListId);

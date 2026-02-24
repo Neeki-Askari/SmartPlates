@@ -22,7 +22,7 @@ export const useUserShoppingLists = (userId: string | null) => {
     queryFn: async () => {
       if (!userId) throw new Error('User ID is required');
       try {
-        return await shoppingListApi.getUserShoppingLists(userId);
+        return await shoppingListApi.getUserShoppingLists();
       } catch (error) {
         console.error('Error fetching shopping lists:', error);
         return [];
