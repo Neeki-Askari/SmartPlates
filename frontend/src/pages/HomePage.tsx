@@ -25,7 +25,7 @@ export const HomePage = () => {
     <Container>
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
-          Welcome to Meal Planner
+          Welcome to SmartPlates
         </h1>
         <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
           Organize your recipes, plan your weekly meals, and generate shopping lists with ease.

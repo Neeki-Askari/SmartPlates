@@ -38,6 +38,7 @@ public class GetSharedRecipes(AppDbContext db)
                 sr.OriginalRecipe.LastCookedDate,
                 sr.OriginalRecipe.CreatedAt,
                 sr.OriginalRecipe.UpdatedAt,
+                sr.OriginalRecipe.IsPublic,
                 sr.OriginalRecipe.Ingredients.Select(i => new IngredientDto(
                     i.Id,
                     i.RecipeId,

@@ -53,7 +53,8 @@ public class GetMealPlan(AppDbContext db)
                     mpr.Recipe.ProportionFactor,
                     mpr.Recipe.LastCookedDate,
                     mpr.Recipe.CreatedAt,
-                    mpr.Recipe.UpdatedAt
+                    mpr.Recipe.UpdatedAt,
+                    mpr.Recipe.IsPublic
                 )
             )).ToList()
         );

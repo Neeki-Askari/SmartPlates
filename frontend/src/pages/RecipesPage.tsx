@@ -10,15 +10,21 @@ import {
   useCreateRecipe,
   useUpdateRecipe,
   useDeleteRecipe,
+  useCopyRecipe,
 } from '../hooks/useRecipes.query';
 import { RecipeForm } from '../components/features/recipes/RecipeForm';
 import { RecipeDetail } from '../components/features/recipes/RecipeDetail';
 import { RecipeCard } from '../components/features/recipes/RecipeCard';
+import { LoginModal } from '../components/common/LoginModal';
 import { CUISINE_TYPES, HEALTH_RATINGS } from '../types';
 import { useUser } from '../contexts/UserContext';
+import { useAuth0 } from '@auth0/auth0-react';
+
+type RecipeView = 'all' | 'mine';
 
 export const RecipesPage = () => {
   const { user } = useUser();
+  const { isAuthenticated } = useAuth0();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('');
   const [healthFilter, setHealthFilter] = useState('');
@@ -26,7 +32,8 @@ export const RecipesPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
-  const [showMyRecipesOnly, setShowMyRecipesOnly] = useState(true);
+  const [recipeView, setRecipeView] = useState<RecipeView>('mine');
+  const [showLoginForCopy, setShowLoginForCopy] = useState(false);
 
   // Get user ID from synced user (this is the database Guid)
   const userId = user?.id;
@@ -36,9 +43,9 @@ export const RecipesPage = () => {
     data: recipes = [],
     isLoading: loading,
     error: queryError,
-    refetch,
   } = useRecipes({
-    userId: showMyRecipesOnly ? userId : undefined,
+    userId: recipeView !== 'all' ? userId : undefined,
+    isPublic: undefined,
     searchTerm: searchTerm || undefined,
     cuisineType: cuisineFilter || undefined,
     healthRating: healthFilter || undefined,
@@ -51,6 +58,7 @@ export const RecipesPage = () => {
   const createRecipeMutation = useCreateRecipe();
   const updateRecipeMutation = useUpdateRecipe();
   const deleteRecipeMutation = useDeleteRecipe();
+  const copyRecipeMutation = useCopyRecipe();
 
   const error = queryError ? String(queryError) : null;
 
@@ -79,6 +87,18 @@ export const RecipesPage = () => {
     setShowForm(false);
   };
 
+  const handleCopy = async (recipeId: string) => {
+    if (!isAuthenticated) {
+      setShowLoginForCopy(true);
+      return;
+    }
+    try {
+      await copyRecipeMutation.mutateAsync(recipeId);
+    } catch (err) {
+      console.error('Failed to copy recipe:', err);
+    }
+  };
+
   return (
     <Container>
       <div className="mb-8">
@@ -88,12 +108,12 @@ export const RecipesPage = () => {
             <p className="text-neutral-600">Manage and organize all your recipes in one place</p>
           </div>
 
-          {/* Toggle between My Recipes and All Recipes */}
+          {/* 3-way view toggle */}
           <div className="flex items-center bg-neutral-100 rounded-lg p-1">
             <button
-              onClick={() => setShowMyRecipesOnly(true)}
+              onClick={() => setRecipeView('mine')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                showMyRecipesOnly
+                recipeView === 'mine'
                   ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
@@ -101,9 +121,9 @@ export const RecipesPage = () => {
               My Recipes
             </button>
             <button
-              onClick={() => setShowMyRecipesOnly(false)}
+              onClick={() => setRecipeView('all')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                !showMyRecipesOnly
+                recipeView === 'all'
                   ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
@@ -185,6 +205,8 @@ export const RecipesPage = () => {
               key={recipe.id}
               recipe={recipe}
               onClick={() => setSelectedRecipeId(recipe.id)}
+              currentUserId={userId}
+              onCopy={handleCopy}
             />
           ))}
         </div>
@@ -212,8 +234,17 @@ export const RecipesPage = () => {
         isOpen={!!selectedRecipeId && !recipeLoading}
         onClose={() => setSelectedRecipeId(null)}
         recipe={selectedRecipe}
-        onDelete={handleDelete}
-        onEdit={() => selectedRecipeId && handleEdit(selectedRecipeId)}
+        onDelete={selectedRecipe?.userId === userId ? handleDelete : undefined}
+        onEdit={selectedRecipe?.userId === userId ? () => selectedRecipeId && handleEdit(selectedRecipeId) : undefined}
+        currentUserId={userId}
+        onCopy={handleCopy}
+      />
+
+      {/* Login prompt for unauthenticated copy attempts */}
+      <LoginModal
+        isOpen={showLoginForCopy}
+        onClose={() => setShowLoginForCopy(false)}
+        featureName="copy recipes"
       />
     </Container>
   );

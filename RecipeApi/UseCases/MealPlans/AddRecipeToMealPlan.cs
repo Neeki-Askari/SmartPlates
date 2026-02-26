@@ -72,7 +72,8 @@ public class AddRecipeToMealPlan(AppDbContext db)
                 recipe.ProportionFactor,
                 recipe.LastCookedDate,
                 recipe.CreatedAt,
-                recipe.UpdatedAt
+                recipe.UpdatedAt,
+                recipe.IsPublic
             )
         );
     }

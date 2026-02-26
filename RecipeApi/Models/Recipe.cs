@@ -20,6 +20,9 @@ public class Recipe
     public int OriginalServings { get; set; } = 1; // How many people the original recipe serves
     public decimal ProportionFactor { get; set; } = 1.0m; // User's custom proportion adjustment
 
+    // Visibility
+    public bool IsPublic { get; set; } = true; // false = private (only visible to owner)
+
     // Tracking
     public DateTime? LastCookedDate { get; set; } // Null means never cooked
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

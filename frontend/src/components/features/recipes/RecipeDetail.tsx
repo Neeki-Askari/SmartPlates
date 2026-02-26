@@ -7,6 +7,8 @@ interface RecipeDetailProps {
   recipe: RecipeWithIngredients | null;
   onEdit?: () => void;
   onDelete?: () => void;
+  currentUserId?: string;
+  onCopy?: (id: string) => void;
 }
 
 export const RecipeDetail: React.FC<RecipeDetailProps> = ({
@@ -15,6 +17,8 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   recipe,
   onEdit,
   onDelete,
+  currentUserId,
+  onCopy,
 }) => {
   if (!recipe) return null;
 
@@ -41,6 +45,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           {recipe.healthRating && (
             <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
               {recipe.healthRating}
+            </span>
+          )}
+          {!recipe.isPublic && (
+            <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm rounded-full">
+              Private
             </span>
           )}
           <span className="px-3 py-1 bg-neutral-100 text-neutral-700 text-sm rounded-full">
@@ -125,7 +134,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             </div>
           )}
 
-          {recipe.lastCookedDate && (
+          {recipe.userId === currentUserId && recipe.lastCookedDate && (
             <div>
               <span className="font-semibold text-neutral-700">Last Cooked:</span>
               <span className="ml-2 text-neutral-600">
@@ -152,12 +161,17 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200">
-          {onDelete && (
+          {recipe.isPublic && recipe.userId !== currentUserId && onCopy && (
+            <Button variant="outline" onClick={() => onCopy(recipe.id)}>
+              Copy to my recipes
+            </Button>
+          )}
+          {recipe.userId === currentUserId && onDelete && (
             <Button variant="danger" onClick={onDelete}>
               Delete Recipe
             </Button>
           )}
-          {onEdit && (
+          {recipe.userId === currentUserId && onEdit && (
             <Button onClick={onEdit}>
               Edit Recipe
             </Button>

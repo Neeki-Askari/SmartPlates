@@ -12,7 +12,6 @@ public class CreateRecipe(AppDbContext db)
         // Validate required fields
         if (dto.UserId == Guid.Empty) throw new InvalidOperationException("UserId is required.");
         if (string.IsNullOrWhiteSpace(dto.Title)) throw new InvalidOperationException("Title is required.");
-        if (dto.Ingredients is null) throw new InvalidOperationException("Ingredients array is required (can be empty).");
 
         // Validate user
         var userExists = await db.Users.AnyAsync(u => u.Id == dto.UserId, ct);
@@ -31,7 +30,8 @@ public class CreateRecipe(AppDbContext db)
             RecipeLink = dto.RecipeLink,
             OriginalServings = dto.OriginalServings,
             ProportionFactor = dto.ProportionFactor,
-            Ingredients = dto.Ingredients.Select(i => new Ingredient
+            IsPublic = dto.IsPublic,
+            Ingredients = (dto.Ingredients ?? new List<IngredientInput>()).Select(i => new Ingredient
             {
                 Id       = Guid.NewGuid(),
                 Name     = i.Name,
@@ -63,6 +63,7 @@ public class CreateRecipe(AppDbContext db)
             recipe.LastCookedDate,
             recipe.CreatedAt,
             recipe.UpdatedAt,
+            recipe.IsPublic,
             recipe.Ingredients.Select(i =>
                 new IngredientDto(i.Id, recipe.Id, i.Name, i.Quantity, i.Unit,
                     i.CostPerUnit, i.CaloriesPerUnit, i.SizeBought, i.ProportionFactor)

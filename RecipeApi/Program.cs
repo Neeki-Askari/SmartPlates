@@ -46,7 +46,7 @@ builder.Configuration["Microsoft:RedirectUri"] = Environment.GetEnvironmentVaria
 
 // EF Core + Postgres
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
-var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5433";
+var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "recipe_db";
 var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
@@ -113,6 +113,7 @@ builder.Services.AddScoped<CreateRecipe>();
 builder.Services.AddScoped<UpdateRecipe>();
 builder.Services.AddScoped<DeleteRecipe>();
 builder.Services.AddScoped<GetAllRecipes>();
+builder.Services.AddScoped<CopyRecipe>();
 
 builder.Services.AddScoped<GetIngredient>();
 builder.Services.AddScoped<ListIngredientsByRecipe>();
@@ -365,11 +366,15 @@ app.MapDelete("/api/users/{id:guid}", async (Guid id, DeleteUser uc, Cancellatio
 // ===== RECIPES =====
 
 app.MapGet("/api/recipes", async (
+    HttpContext httpContext,
+    AppDbContext db,
     [FromServices] GetAllRecipes uc,
     [AsParameters] GetAllRecipesDto dto,
     CancellationToken ct) =>
 {
-    var result = await uc.Execute(dto, ct);
+    var requestingUserId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    var dtoWithUser = dto with { RequestingUserId = requestingUserId };
+    var result = await uc.Execute(dtoWithUser, ct);
     return Results.Ok(result);
 });
 
@@ -409,6 +414,30 @@ app.MapDelete("/api/recipes/{id:guid}", async (Guid id, DeleteRecipe uc, Cancell
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
 });
+
+app.MapPost("/api/recipes/{id:guid}/copy", async (
+    Guid id,
+    HttpContext httpContext,
+    AppDbContext db,
+    [FromServices] CopyRecipe uc,
+    CancellationToken ct) =>
+{
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    try
+    {
+        var copy = await uc.Execute(id, userId.Value, ct);
+        return Results.Created($"/api/recipes/{copy.Id}", copy);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(ex.Message);
+    }
+}).RequireAuthorization();
 
 // ===== INGREDIENTS =====
 app.MapGet("/api/ingredients/{id:guid}", async (Guid id, GetIngredient uc, CancellationToken ct) =>

@@ -56,6 +56,7 @@ export interface Recipe {
   lastCookedDate?: string;
   createdAt: string;
   updatedAt: string;
+  isPublic: boolean;
 }
 
 export interface RecipeWithIngredients extends Recipe {
@@ -73,6 +74,7 @@ export interface CreateRecipeDto {
   recipeLink?: string;
   originalServings: number;
   proportionFactor: number;
+  isPublic?: boolean;
   ingredients: IngredientInput[];
 }
 
@@ -87,6 +89,7 @@ export interface UpdateRecipeDto {
   originalServings: number;
   proportionFactor: number;
   lastCookedDate?: string;
+  isPublic?: boolean;
   ingredients: IngredientInput[];
 }
 
@@ -97,6 +100,7 @@ export interface GetAllRecipesParams {
   searchTerm?: string;
   sortBy?: 'name' | 'lastCooked' | 'createdAt';
   includeIngredients?: boolean;
+  isPublic?: boolean;
   page?: number;
   pageSize?: number;
 }

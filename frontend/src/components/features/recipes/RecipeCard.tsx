@@ -4,9 +4,11 @@ import type { Recipe, RecipeWithIngredients } from '../../../types';
 interface RecipeCardProps {
   recipe: Recipe | RecipeWithIngredients;
   onClick?: () => void;
+  currentUserId?: string;
+  onCopy?: (id: string) => void;
 }
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, currentUserId, onCopy }) => {
   const isRecipeWithIngredients = (r: Recipe | RecipeWithIngredients): r is RecipeWithIngredients => {
     return 'ingredients' in r;
   };
@@ -34,6 +36,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
               {recipe.healthRating}
             </span>
           )}
+          {!recipe.isPublic && (
+            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">
+              Private
+            </span>
+          )}
           {ingredientCount > 0 && (
             <span className="px-2 py-1 bg-neutral-100 text-neutral-700 text-xs rounded">
               {ingredientCount} ingredients
@@ -43,14 +50,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
 
         <div className="flex justify-between items-center text-sm text-neutral-500">
           <span>Serves: {recipe.originalServings}</span>
-          {recipe.lastCookedDate ? (
-            <span className="text-xs">
-              Cooked: {new Date(recipe.lastCookedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </span>
-          ) : (
-            <span className="text-xs text-neutral-400">Never cooked</span>
+          {recipe.userId === currentUserId && (
+            recipe.lastCookedDate ? (
+              <span className="text-xs">
+                Cooked: {new Date(recipe.lastCookedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            ) : (
+              <span className="text-xs text-neutral-400">Never cooked</span>
+            )
           )}
         </div>
+
       </CardContent>
     </Card>
   );

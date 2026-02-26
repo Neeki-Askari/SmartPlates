@@ -22,11 +22,12 @@ public class UpdateRecipe(AppDbContext db)
         r.OriginalServings = dto.OriginalServings;
         r.ProportionFactor = dto.ProportionFactor;
         r.LastCookedDate = dto.LastCookedDate;
+        r.IsPublic = dto.IsPublic;
         r.UpdatedAt = DateTime.UtcNow;
 
         // Update ingredients - remove old ones and add new ones
         r.Ingredients.Clear();
-        foreach (var ingDto in dto.Ingredients)
+        foreach (var ingDto in (dto.Ingredients ?? new List<IngredientInput>()))
         {
             r.Ingredients.Add(new Ingredient
             {
@@ -57,7 +58,8 @@ public class UpdateRecipe(AppDbContext db)
             r.ProportionFactor,
             r.LastCookedDate,
             r.CreatedAt,
-            r.UpdatedAt
+            r.UpdatedAt,
+            r.IsPublic
         );
     }
 }

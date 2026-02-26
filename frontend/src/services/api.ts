@@ -116,6 +116,9 @@ export const recipeApi = {
 
   shareRecipe: (data: ShareRecipeDto) =>
     api.post<SharedRecipe>("/recipes/share", data).then((res) => res.data),
+
+  copyRecipe: (id: string) =>
+    api.post<RecipeWithIngredients>(`/recipes/${id}/copy`).then((res) => res.data),
 };
 
 // ===== INGREDIENT API =====

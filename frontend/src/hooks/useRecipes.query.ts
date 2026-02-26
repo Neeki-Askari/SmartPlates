@@ -94,3 +94,18 @@ export const useDeleteRecipe = () => {
     },
   });
 };
+
+// Copy recipe mutation
+export const useCopyRecipe = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => recipeApi.copyRecipe(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
+    },
+    onError: (error: unknown) => {
+      throw new Error(handleApiError(error));
+    },
+  });
+};

@@ -26,6 +26,7 @@ public class GetRecipe(AppDbContext db)
                 r.LastCookedDate,
                 r.CreatedAt,
                 r.UpdatedAt,
+                r.IsPublic,
                 r.Ingredients
                  .Select(i => new IngredientDto(i.Id, r.Id, i.Name, i.Quantity, i.Unit,
                      i.CostPerUnit, i.CaloriesPerUnit, i.SizeBought, i.ProportionFactor))

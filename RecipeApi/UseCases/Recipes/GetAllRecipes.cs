@@ -34,6 +34,15 @@ public class GetAllRecipes(AppDbContext db)
                             (r.Description != null && r.Description.Contains(dto.SearchTerm)));
         }
 
+        // Visibility: always hide private recipes unless the requester is the owner
+        q = q.Where(r => r.IsPublic || r.UserId == dto.RequestingUserId);
+
+        // Optional explicit isPublic filter (used by "My Private Recipes" view)
+        if (dto.IsPublic.HasValue)
+        {
+            q = q.Where(r => r.IsPublic == dto.IsPublic.Value);
+        }
+
         // sorting
         q = dto.SortBy?.ToLower() switch
         {
@@ -67,6 +76,7 @@ public class GetAllRecipes(AppDbContext db)
                     r.LastCookedDate,
                     r.CreatedAt,
                     r.UpdatedAt,
+                    r.IsPublic,
                     r.Ingredients
                         .Select(i => new IngredientDto(i.Id, i.RecipeId, i.Name, i.Quantity, i.Unit,
                             i.CostPerUnit, i.CaloriesPerUnit, i.SizeBought, i.ProportionFactor))
@@ -94,7 +104,8 @@ public class GetAllRecipes(AppDbContext db)
                     r.ProportionFactor,
                     r.LastCookedDate,
                     r.CreatedAt,
-                    r.UpdatedAt
+                    r.UpdatedAt,
+                    r.IsPublic
                 ))
                 .ToListAsync(ct);
 

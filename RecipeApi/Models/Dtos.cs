@@ -59,7 +59,8 @@ public record CreateRecipeDto(
     string? RecipeLink,
     int OriginalServings,
     decimal ProportionFactor,
-    List<IngredientInput> Ingredients
+    bool IsPublic = true,
+    List<IngredientInput>? Ingredients = null
 );
 
 public record UpdateRecipeDto(
@@ -73,7 +74,8 @@ public record UpdateRecipeDto(
     int OriginalServings,
     decimal ProportionFactor,
     DateTime? LastCookedDate,
-    List<IngredientInput> Ingredients
+    bool IsPublic = true,
+    List<IngredientInput>? Ingredients = null
 );
 
 public record RecipeDto(
@@ -90,7 +92,8 @@ public record RecipeDto(
     decimal ProportionFactor,
     DateTime? LastCookedDate,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    bool IsPublic
 );
 
 public record RecipeWithIngredientsDto(
@@ -108,6 +111,7 @@ public record RecipeWithIngredientsDto(
     DateTime? LastCookedDate,
     DateTime CreatedAt,
     DateTime UpdatedAt,
+    bool IsPublic,
     IReadOnlyList<IngredientDto> Ingredients
 );
 
@@ -118,6 +122,8 @@ public record GetAllRecipesDto(
     string? SearchTerm = null,
     string? SortBy = null, // "name", "lastCooked", "createdAt"
     bool IncludeIngredients = false,
+    bool? IsPublic = null,
+    Guid? RequestingUserId = null,
     int Page = 1,
     int PageSize = 50
 );

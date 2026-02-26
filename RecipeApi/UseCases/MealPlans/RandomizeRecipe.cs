@@ -59,7 +59,8 @@ public class RandomizeRecipe(AppDbContext db)
                 r.ProportionFactor,
                 r.LastCookedDate,
                 r.CreatedAt,
-                r.UpdatedAt
+                r.UpdatedAt,
+                r.IsPublic
             ))
             .ToList();
 

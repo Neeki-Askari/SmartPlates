@@ -101,7 +101,8 @@ public class DuplicateMealPlan(AppDbContext db)
                         recipe.ProportionFactor,
                         recipe.LastCookedDate,
                         recipe.CreatedAt,
-                        recipe.UpdatedAt
+                        recipe.UpdatedAt,
+                        recipe.IsPublic
                     )
                     : throw new InvalidOperationException($"Recipe {mpr.RecipeId} not found")
             )).ToList()

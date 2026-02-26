@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Button, Input, TextArea, Select, Modal, ModalFooter } from '../../ui';
-import { CUISINE_TYPES, HEALTH_RATINGS, type CreateRecipeDto, type IngredientInput } from '../../../types';
+import { CUISINE_TYPES, HEALTH_RATINGS, type CreateRecipeDto, type UpdateRecipeDto, type IngredientInput, type RecipeWithIngredients } from '../../../types';
 
 interface RecipeFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateRecipeDto) => Promise<void>;
-  userId: string;
-  initialData?: Partial<CreateRecipeDto>;
+  onSubmit: (data: CreateRecipeDto | UpdateRecipeDto) => Promise<void>;
+  userId?: string;
+  recipe?: RecipeWithIngredients | null;
 }
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
@@ -15,19 +15,30 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   onClose,
   onSubmit,
   userId,
-  initialData,
+  recipe,
 }) => {
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [description, setDescription] = useState(initialData?.description || '');
-  const [instructions, setInstructions] = useState(initialData?.instructions || '');
-  const [cuisineType, setCuisineType] = useState(initialData?.cuisineType || '');
-  const [healthRating, setHealthRating] = useState(initialData?.healthRating || '');
-  const [comments, setComments] = useState(initialData?.comments || '');
-  const [recipeLink, setRecipeLink] = useState(initialData?.recipeLink || '');
-  const [originalServings, setOriginalServings] = useState(initialData?.originalServings || 4);
-  const [proportionFactor, setProportionFactor] = useState(initialData?.proportionFactor || 1.0);
+  const [title, setTitle] = useState(recipe?.title || '');
+  const [description, setDescription] = useState(recipe?.description || '');
+  const [instructions, setInstructions] = useState(recipe?.instructions || '');
+  const [cuisineType, setCuisineType] = useState(recipe?.cuisineType || '');
+  const [healthRating, setHealthRating] = useState(recipe?.healthRating || '');
+  const [comments, setComments] = useState(recipe?.comments || '');
+  const [recipeLink, setRecipeLink] = useState(recipe?.recipeLink || '');
+  const [originalServings, setOriginalServings] = useState(recipe?.originalServings || 4);
+  const [proportionFactor, setProportionFactor] = useState(recipe?.proportionFactor || 1.0);
+  const [isPublic, setIsPublic] = useState(recipe?.isPublic ?? true);
   const [ingredients, setIngredients] = useState<IngredientInput[]>(
-    initialData?.ingredients || [{ name: '', quantity: undefined, unit: '', proportionFactor: 1.0 }]
+    recipe?.ingredients?.length
+      ? recipe.ingredients.map(i => ({
+          name: i.name,
+          quantity: i.quantity ?? undefined,
+          unit: i.unit ?? '',
+          costPerUnit: i.costPerUnit ?? undefined,
+          caloriesPerUnit: i.caloriesPerUnit ?? undefined,
+          sizeBought: i.sizeBought ?? undefined,
+          proportionFactor: i.proportionFactor,
+        }))
+      : [{ name: '', quantity: undefined, unit: '', proportionFactor: 1.0 }]
   );
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +62,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
 
     try {
       await onSubmit({
-        userId,
+        userId: userId ?? '',
         title,
         description,
         instructions,
@@ -61,6 +72,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         recipeLink,
         originalServings,
         proportionFactor,
+        isPublic,
         ingredients: ingredients.filter(ing => ing.name.trim() !== ''),
       });
       onClose();
@@ -72,7 +84,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add New Recipe" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={recipe ? `Edit: ${recipe.title}` : 'Add New Recipe'} size="xl">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
         <div className="space-y-4">
@@ -127,6 +139,29 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
               ...HEALTH_RATINGS.map((h) => ({ value: h, label: h })),
             ]}
           />
+        </div>
+
+        {/* Visibility Toggle */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-neutral-700">Visibility</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPublic}
+            onClick={() => setIsPublic(!isPublic)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isPublic ? 'bg-primary-600' : 'bg-neutral-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isPublic ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm text-neutral-500">
+            {isPublic ? 'Public — visible to everyone' : 'Private — only visible to you'}
+          </span>
         </div>
 
         {/* Servings and Proportions */}

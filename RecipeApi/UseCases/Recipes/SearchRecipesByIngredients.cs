@@ -52,6 +52,7 @@ public class SearchRecipesByIngredients(AppDbContext db)
             r.LastCookedDate,
             r.CreatedAt,
             r.UpdatedAt,
+            r.IsPublic,
             r.Ingredients.Select(i => new IngredientDto(
                 i.Id,
                 i.RecipeId,
