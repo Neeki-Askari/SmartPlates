@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState, useRef, useEffect } from "react";
+import logo from "../../assets/logo-transparent.png";
+import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface NavItem {
   label: string;
@@ -9,15 +10,17 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Recipes', to: '/recipes' },
-  { label: 'Meal Plans', to: '/mealplans', requiresAuth: true },
-  { label: 'Grocery Lists', to: '/grocery-lists', requiresAuth: true },
+  { label: "Recipes", to: "/recipes" },
+  { label: "Meal Plans", to: "/mealplans", requiresAuth: true },
+  { label: "Grocery Lists", to: "/grocery-lists", requiresAuth: true },
 ];
 
-const linkClass = 'text-neutral-700 hover:text-primary-600 font-medium transition-colors';
+const linkClass =
+  "text-neutral-700 hover:text-primary-600 font-medium transition-colors";
 
 export const Header: React.FC = () => {
-  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
+    useAuth0();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const renderNavLink = (item: NavItem, mobile?: boolean) => {
@@ -25,7 +28,10 @@ export const Header: React.FC = () => {
 
     if (isDisabled) {
       return (
-        <span key={item.label} className={`text-neutral-300 font-medium cursor-default select-none ${mobile ? 'block' : ''}`}>
+        <span
+          key={item.label}
+          className={`text-neutral-300 font-medium cursor-default select-none ${mobile ? "block" : ""}`}
+        >
           {item.label}
         </span>
       );
@@ -35,7 +41,9 @@ export const Header: React.FC = () => {
       <Link
         key={item.label}
         to={item.to}
-        onClick={() => { if (mobile) setMobileMenuOpen(false); }}
+        onClick={() => {
+          if (mobile) setMobileMenuOpen(false);
+        }}
         className={mobile ? `block ${linkClass}` : linkClass}
       >
         {item.label}
@@ -46,11 +54,12 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold text-primary-600">SmartPlates</span>
+                <img src={logo} alt="SmartPlates" className="h-13 w-auto " />
+                <h3 className="text-2xl font-bold bottom mt-5">SmartPlates</h3>
               </Link>
             </div>
 
@@ -65,7 +74,9 @@ export const Header: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 userName={user?.name || user?.email}
                 onLogin={() => loginWithRedirect()}
-                onLogout={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                onLogout={() =>
+                  logout({ logoutParams: { returnTo: window.location.origin } })
+                }
               />
             </div>
 
@@ -89,8 +100,16 @@ export const Header: React.FC = () => {
                   isLoading={isLoading}
                   isAuthenticated={isAuthenticated}
                   userName={user?.name || user?.email}
-                  onLogin={() => { loginWithRedirect(); setMobileMenuOpen(false); }}
-                  onLogout={() => { logout({ logoutParams: { returnTo: window.location.origin } }); setMobileMenuOpen(false); }}
+                  onLogin={() => {
+                    loginWithRedirect();
+                    setMobileMenuOpen(false);
+                  }}
+                  onLogout={() => {
+                    logout({
+                      logoutParams: { returnTo: window.location.origin },
+                    });
+                    setMobileMenuOpen(false);
+                  }}
                   mobile
                 />
               </div>
@@ -122,12 +141,15 @@ function AuthSection({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   if (isLoading) {
@@ -161,8 +183,13 @@ function AuthSection({
 
   // Desktop: user avatar dropdown
   const initials = userName
-    ? userName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
+    ? userName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -177,11 +204,16 @@ function AuthSection({
       {dropdownOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 z-50">
           <div className="px-4 py-3 border-b border-neutral-100">
-            <p className="text-sm font-medium text-neutral-900 truncate">{userName}</p>
+            <p className="text-sm font-medium text-neutral-900 truncate">
+              {userName}
+            </p>
           </div>
           <div className="p-2">
             <button
-              onClick={() => { setDropdownOpen(false); onLogout(); }}
+              onClick={() => {
+                setDropdownOpen(false);
+                onLogout();
+              }}
               className="w-full rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer"
             >
               Logout
@@ -195,12 +227,17 @@ function AuthSection({
 
 function MenuIcon({ open }: { open: boolean }) {
   return (
-    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+        d={open ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
       />
     </svg>
   );

@@ -1,284 +1,307 @@
-# Meal Planning Application
+# Meal Plan App
 
-A comprehensive meal planning application with recipe management, weekly meal planning, and automated shopping list generation. Built with React, Vite, Tailwind CSS v4 (frontend) and ASP.NET Core with PostgreSQL (backend).
+A full-stack meal planning application for managing recipes, building weekly meal plans, and auto-generating shopping lists. Supports per-user recipe libraries, recipe sharing, and Auth0-based authentication.
+
+![.NET](https://img.shields.io/badge/.NET_9-512BD4?style=flat&logo=dotnet&logoColor=white)
+![React](https://img.shields.io/badge/React_18-20232A?style=flat&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
+![Auth0](https://img.shields.io/badge/Auth0-EB5424?style=flat&logo=auth0&logoColor=white)
+
+---
 
 ## Features
 
-### Recipe Management
-- ✅ Create, read, update, and delete recipes
-- ✅ Categorize by cuisine type (American, Mexican, Italian, etc.)
-- ✅ Health ratings (Healthy, Unhealthy, Neutral, Gluten Free, Spicy, etc.)
-- ✅ Track ingredients with cost and calorie information
-- ✅ Add instructions, comments, and recipe links
-- ✅ Proportion factors for custom serving sizes
-- ✅ Track last cooked date
-- ✅ Search and filter recipes by multiple criteria
-- ✅ Sort by name, creation date, or last cooked
+### Recipes
+- Create, edit, and delete recipes with ingredients, instructions, and links
+- Categorize by cuisine type and health rating
+- Track cost, calories, and last cooked date
+- Search and filter by multiple criteria
+- Public/private visibility per recipe
+- Copy shared recipes into your own library
 
 ### Meal Planning
-- ✅ Create weekly meal plans (Sunday-Saturday)
-- ✅ Customizable meal types (Breakfast, Snack 1, Lunch, Snack 2, Dinner, Snack 3/Dessert)
-- ✅ Set number of people for automatic portion scaling
-- ✅ Manually select recipes or use randomization
-- ✅ Randomize with constraints (cuisine type, health rating)
-- ✅ Exclude recipes with specific ingredients
-- ✅ Search recipes based on available ingredients
+- Build weekly meal plans (Sunday–Saturday)
+- Assign recipes to meal slots (Breakfast, Lunch, Dinner, Snacks)
+- Randomize meal slots with filters (cuisine, health rating, ingredient exclusions)
+- Scale portions based on number of people
+- Duplicate existing meal plans
 
 ### Shopping Lists
-- ✅ Auto-generate from meal plans
-- ✅ Aggregated ingredient quantities
-- ✅ Estimated costs per ingredient and total
-- ✅ Calorie information per ingredient and total
-- ✅ Automatic portion scaling based on serving size
+- Auto-generate from any meal plan
+- Aggregated ingredient quantities with estimated cost and calorie totals
+- Save and retrieve past shopping lists
 
-### Recipe Sharing
-- ✅ Share recipes with other users
-- ✅ Users can make their own copies with custom adjustments
-- ✅ Individual databases per user
+### Authentication & Users
+- Auth0-based login (social login supported)
+- Per-user recipe and meal plan libraries
+- Recipe sharing between users
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend framework | ASP.NET Core 9 (Minimal APIs) |
+| ORM | Entity Framework Core 9 |
+| Database | PostgreSQL |
+| Auth | Auth0 + JWT Bearer |
+| Password hashing | BCrypt |
+| API docs | Swagger / OpenAPI |
+| Frontend framework | React 18 + TypeScript |
+| Build tool | Vite 5 |
+| Styling | Tailwind CSS v4 |
+| Routing | React Router v6 |
+| Data fetching | TanStack Query v5 + Axios |
+| Environment variables | DotNetEnv (backend), Vite env (frontend) |
+
+---
 
 ## Project Structure
 
 ```
 MealPlanApp/
-├── RecipeApi/                 # Backend (.NET 9 + PostgreSQL)
-│   ├── Models/               # Entity models and DTOs
-│   ├── Data/                 # EF Core DbContext
-│   ├── UseCases/             # Business logic
+├── RecipeApi/                  # ASP.NET Core backend
+│   ├── Models/                 # Entity models and DTOs
+│   ├── Data/                   # EF Core DbContext
+│   ├── UseCases/               # Business logic by domain
+│   │   ├── Auth/
 │   │   ├── Users/
 │   │   ├── Recipes/
 │   │   ├── Ingredients/
 │   │   ├── MealPlans/
-│   │   └── SharedRecipes/
-│   ├── Migrations/           # Database migrations
-│   └── Program.cs            # API endpoints
+│   │   ├── SharedRecipes/
+│   │   └── ShoppingLists/
+│   ├── Services/               # Auth, hashing, token services
+│   ├── Migrations/             # EF Core migrations
+│   ├── Seed/                   # Database seeder
+│   └── Program.cs              # App entry point and route definitions
 │
-└── frontend/                  # Frontend (React + Vite + Tailwind v4)
-    ├── src/
-    │   ├── components/
-    │   │   ├── ui/           # Reusable UI components
-    │   │   ├── layout/       # Layout components
-    │   │   └── features/     # Feature-specific components
-    │   ├── hooks/            # Custom React hooks
-    │   ├── pages/            # Page components
-    │   ├── services/         # API client
-    │   ├── types/            # TypeScript type definitions
-    │   └── utils/            # Utility functions
-    └── public/
+└── frontend/                   # React frontend
+    └── src/
+        ├── components/
+        │   ├── ui/             # Reusable UI primitives
+        │   ├── layout/         # Header, Layout, Container
+        │   └── features/       # Recipe, MealPlan components
+        ├── hooks/              # Custom data-fetching hooks
+        ├── pages/              # Route-level page components
+        ├── services/           # Axios API client
+        └── types/              # Shared TypeScript types
 ```
+
+---
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-### Backend Requirements
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [PostgreSQL](https://www.postgresql.org/download/) (version 12 or higher)
+- [PostgreSQL 12+](https://www.postgresql.org/download/)
+- [Node.js 18+](https://nodejs.org/)
+- An [Auth0](https://auth0.com/) account and application
 
-### Frontend Requirements
-- [Node.js](https://nodejs.org/) (version 18 or higher)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+---
 
-## Getting Started
+## Setup
 
-### 1. Database Setup
-
-First, ensure PostgreSQL is running and create a database:
+### 1. Clone the repo
 
 ```bash
-# Connect to PostgreSQL
+git clone <your-repo-url>
+cd MealPlanApp
+```
+
+### 2. Create the PostgreSQL database
+
+```bash
 psql -U postgres
-
-# Create database
+```
+```sql
 CREATE DATABASE recipe_db;
-
-# Exit psql
 \q
 ```
 
-### 2. Backend Setup
+### 3. Configure the backend environment
+
+Create `RecipeApi/.env` (never committed):
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=recipe_db
+DB_USER=postgres
+DB_PASSWORD=your_postgres_password
+
+# Auth0
+AUTH0_DOMAIN=your-tenant.us.auth0.com
+AUTH0_AUDIENCE=https://your-api-identifier
+
+# Optional: seed the DB on first run
+SEED=true
+```
+
+### 4. Run the backend
 
 ```bash
-# Navigate to the backend directory
 cd RecipeApi
-
-# Restore NuGet packages
 dotnet restore
-
-# Update the connection string in appsettings.json if needed
-# Default: "Host=localhost;Port=5432;Database=recipe_db;Username=postgres;Password=postgres"
-
-# Apply database migrations
-dotnet ef database update
-
-# Run the backend
 dotnet run
 ```
 
-The API will be available at:
-- HTTP: `http://localhost:5000`
-- HTTPS: `https://localhost:5001`
-- Swagger UI: `http://localhost:5000/swagger`
+Migrations are applied automatically on startup.
 
-### 3. Frontend Setup
+| Endpoint | URL |
+|---|---|
+| API | `http://localhost:5076` |
+| Swagger UI | `http://localhost:5076/swagger` |
+
+### 5. Configure the frontend environment
+
+Create `frontend/.env` (never committed):
+
+```env
+VITE_API_URL=http://localhost:5076/api
+
+# Auth0
+VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
+VITE_AUTH0_CLIENT_ID=your_auth0_client_id
+VITE_AUTH0_AUDIENCE=https://your-api-identifier
+VITE_AUTH0_REDIRECT_URI=http://localhost:5173
+```
+
+### 6. Run the frontend
 
 ```bash
-# Navigate to the frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Copy environment variables
-cp .env.example .env
-
-# Start the development server
 npm run dev
 ```
 
-The frontend will be available at: `http://localhost:5173`
+Frontend runs at `http://localhost:5173`.
 
-## API Endpoints
+---
 
-### Users
-- `GET /api/users/{id}` - Get user by ID
-- `POST /api/users` - Create user
-- `PUT /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete user
+## Auth0 Setup
 
-### Recipes
-- `GET /api/recipes` - Get all recipes (with filters)
-- `GET /api/recipes/{id}` - Get recipe by ID
-- `POST /api/recipes` - Create recipe
-- `PUT /api/recipes/{id}` - Update recipe
-- `DELETE /api/recipes/{id}` - Delete recipe
-- `POST /api/recipes/search-by-ingredients` - Search recipes by ingredients
+1. Create an **Application** in Auth0 (Single Page Application)
+   - Add `http://localhost:5173` to **Allowed Callback URLs**, **Logout URLs**, and **Web Origins**
+2. Create an **API** in Auth0
+   - Set the **Identifier** — this is your `AUTH0_AUDIENCE`
+3. Copy your **Domain** and **Client ID** into both `.env` files
 
-### Ingredients
-- `GET /api/ingredients/{id}` - Get ingredient by ID
-- `GET /api/ingredients/by-recipe/{recipeId}` - Get all ingredients for a recipe
-- `DELETE /api/ingredients/{id}` - Delete ingredient
+---
 
-### Meal Plans
-- `POST /api/mealplans` - Create meal plan
-- `GET /api/mealplans/{id}` - Get meal plan with recipes
-- `POST /api/mealplans/add-recipe` - Add recipe to meal plan
-- `POST /api/mealplans/randomize` - Get random recipe suggestions
-- `GET /api/mealplans/{id}/shopping-list` - Generate shopping list
+## API Reference
 
-### Recipe Sharing
-- `POST /api/recipes/share` - Share recipe with another user
-- `GET /api/users/{userId}/shared-recipes` - Get shared recipes for user
+<details>
+<summary><strong>Auth</strong></summary>
 
-## Environment Variables
+| Method | Endpoint | Auth |
+|---|---|---|
+| `POST` | `/api/auth/sync` | Required |
+| `GET` | `/api/auth/me` | Required |
 
-### Frontend (.env)
-```
-VITE_API_URL=http://localhost:5000/api
-```
+</details>
 
-### Backend (appsettings.json)
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Host=localhost;Port=5432;Database=recipe_db;Username=postgres;Password=YOUR_PASSWORD"
-  },
-  "Seed": false
-}
-```
+<details>
+<summary><strong>Recipes</strong></summary>
 
-## Technology Stack
+| Method | Endpoint | Auth |
+|---|---|---|
+| `GET` | `/api/recipes` | Optional |
+| `GET` | `/api/recipes/{id}` | — |
+| `POST` | `/api/recipes` | Required |
+| `PUT` | `/api/recipes/{id}` | Required |
+| `DELETE` | `/api/recipes/{id}` | Required |
+| `POST` | `/api/recipes/{id}/copy` | Required |
+| `POST` | `/api/recipes/search-by-ingredients` | — |
+| `POST` | `/api/recipes/share` | — |
+
+</details>
+
+<details>
+<summary><strong>Meal Plans</strong></summary>
+
+| Method | Endpoint | Auth |
+|---|---|---|
+| `GET` | `/api/mealplans` | Required |
+| `POST` | `/api/mealplans` | Required |
+| `GET` | `/api/mealplans/{id}` | Required |
+| `PUT` | `/api/mealplans/{id}` | Required |
+| `DELETE` | `/api/mealplans/{id}` | Required |
+| `POST` | `/api/mealplans/duplicate` | Required |
+| `POST` | `/api/mealplans/add-recipe` | Required |
+| `POST` | `/api/mealplans/randomize` | Required |
+| `GET` | `/api/mealplans/{id}/shopping-list` | Required |
+
+</details>
+
+<details>
+<summary><strong>Shopping Lists</strong></summary>
+
+| Method | Endpoint | Auth |
+|---|---|---|
+| `GET` | `/api/shopping-lists` | Required |
+| `POST` | `/api/shopping-lists/save` | Required |
+| `GET` | `/api/shopping-lists/{id}` | Required |
+| `DELETE` | `/api/shopping-lists/{id}` | Required |
+
+</details>
+
+<details>
+<summary><strong>Ingredients & Users</strong></summary>
+
+| Method | Endpoint | Auth |
+|---|---|---|
+| `GET` | `/api/ingredients/{id}` | — |
+| `GET` | `/api/ingredients/by-recipe/{recipeId}` | — |
+| `DELETE` | `/api/ingredients/{id}` | — |
+| `GET` | `/api/users/{id}` | — |
+| `GET` | `/api/users/{userId}/shared-recipes` | — |
+
+</details>
+
+---
+
+## Useful Commands
 
 ### Backend
-- **Framework**: ASP.NET Core 9 (Minimal APIs)
-- **Database**: PostgreSQL with Entity Framework Core
-- **ORM**: Entity Framework Core 9
-- **Validation**: FluentValidation (optional)
-- **API Documentation**: Swagger/OpenAPI
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite 5
-- **Styling**: Tailwind CSS v4
-- **Routing**: React Router v6
-- **HTTP Client**: Axios
-- **State Management**: React Hooks (useState, useEffect, custom hooks)
-
-## Design Principles
-
-### Component Architecture
-- **Modular Components**: All UI components are modular and reusable
-- **Separation of Concerns**: Business logic in custom hooks, presentation in components
-- **Type Safety**: Full TypeScript coverage for type safety
-- **Responsive Design**: Mobile-first approach, works on desktop, tablet, and mobile
-
-### Styling
-- **Color Scheme**: Blue and gray tones for a minimalistic, clean design
-- **Tailwind CSS v4**: Latest version with `@theme` directive
-- **Responsive**: Breakpoints for sm, md, lg, xl screens
-- **Accessibility**: Proper ARIA labels and keyboard navigation
-
-## Development Scripts
-
-### Backend
 ```bash
-dotnet build                    # Build the project
-dotnet run                      # Run the API
-dotnet test                     # Run tests
-dotnet ef migrations add [Name] # Create new migration
-dotnet ef database update       # Apply migrations
+dotnet run                              # Start API
+dotnet build                            # Build
+dotnet ef migrations add <Name>         # Create a new migration
+dotnet ef database update               # Apply migrations manually
 ```
 
 ### Frontend
+
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run preview  # Preview production build
-npm run lint     # Run ESLint
+npm run dev       # Start dev server
+npm run build     # Production build
+npm run lint      # ESLint check
+npm run preview   # Preview production build
 ```
 
-## Future Enhancements (AI Opportunities)
-
-The following features are planned for future releases:
-
-1. **Smart Recommendations**: Track generated meal plans to learn favorite meals and suggest similar recipes
-2. **Dynamic Pricing**: Pull current ingredient costs from grocery store APIs
-3. **Deal Finder**: Search for sales on frequently used or high-price ingredients
-4. **Nutritional Analysis**: Advanced calorie and macro tracking
-5. **User Authentication**: Full auth system with JWT tokens
-6. **Recipe Import**: Import recipes from URLs
-7. **Mobile App**: React Native mobile application
-8. **Meal Prep Mode**: Batch cooking and meal prep planning
-
-## Contributing
-
-This is a personal project, but suggestions and improvements are welcome!
-
-## License
-
-This project is private and for personal use.
+---
 
 ## Troubleshooting
 
-### Backend won't start
-- Ensure PostgreSQL is running
-- Check connection string in `appsettings.json`
-- Run `dotnet ef database update` to apply migrations
+**Port already in use**
+Another instance of the API is still running. Find and kill it:
+```bash
+lsof -ti :5076 | xargs kill
+```
 
-### Frontend won't start
-- Delete `node_modules` and run `npm install` again
-- Check if port 5173 is already in use
-- Ensure Node.js version is 18 or higher
+**Database connection errors**
+- Confirm PostgreSQL is running: `pg_isready -h localhost -p 5432`
+- Double-check credentials in `RecipeApi/.env`
 
-### API calls failing from frontend
-- Ensure backend is running on port 5000
-- Check CORS settings in `Program.cs`
-- Verify `VITE_API_URL` in `.env` file
+**Auth0 errors**
+- Ensure `AUTH0_DOMAIN` and `AUTH0_AUDIENCE` match exactly between your `.env` and Auth0 dashboard
+- Confirm `http://localhost:5173` is listed in your Auth0 app's allowed callback/logout URLs
 
-### Database migration errors
-- Delete existing migrations and database
-- Recreate migrations: `dotnet ef migrations add InitialCreate`
-- Apply: `dotnet ef database update`
-
-## Contact
-
-For questions or issues, please create an issue in the repository or contact the developer.
+**Frontend API calls failing**
+- Confirm the backend is running on port `5076`
+- Check `VITE_API_URL` in `frontend/.env`

@@ -290,10 +290,10 @@ export const MealPlansPage = () => {
       ) : userMealPlans && userMealPlans.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {userMealPlans.map((plan) => (
-            <Card key={plan.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={plan.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleSelectMealPlan(plan.id)}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <div className="flex-1" onClick={() => handleSelectMealPlan(plan.id)}>
+                  <div className="flex-1">
                     <CardTitle className="text-lg mb-1">{plan.name}</CardTitle>
                     <p className="text-sm text-neutral-500">
                       {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
@@ -312,7 +312,7 @@ export const MealPlansPage = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent onClick={() => handleSelectMealPlan(plan.id)}>
+              <CardContent>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Serving Size:</span>

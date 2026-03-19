@@ -86,12 +86,11 @@ export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
       </Card>
 
       {/* Week Grid */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Day Headers */}
-        <div className="grid grid-cols-8 gap-4">
-          <div className="font-medium text-neutral-700 text-base"></div>
+        <div className="grid grid-cols-7 gap-2">
           {DAYS_OF_WEEK.map((day) => (
-            <div key={day} className="font-semibold text-neutral-900 text-base text-center">
+            <div key={day} className="font-semibold text-neutral-900 text-sm text-center">
               {day}
             </div>
           ))}
@@ -100,15 +99,15 @@ export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
         {/* Meal Rows */}
         {activeMealTypes.map((mealType) => (
           <div key={mealType}>
-            <div className="grid grid-cols-8 gap-4 items-start">
-              {/* Meal Type Label */}
-              <div className="flex items-start justify-end pr-4 pt-4">
-                <span className="text-base font-semibold text-neutral-900">
-                  {MealTypeLabels[mealType]}
-                </span>
-              </div>
+            {/* Meal Type Label above the row */}
+            <div className="mb-1">
+              <span className="text-sm font-semibold text-neutral-500 uppercase tracking-wide">
+                {MealTypeLabels[mealType]}
+              </span>
+            </div>
 
-              {/* Day Slots */}
+            {/* Day Slots */}
+            <div className="grid grid-cols-7 gap-2 items-start">
               {[0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => (
                 <div key={`${dayOfWeek}-${mealType}`} className="min-w-0">
                   <MealSlot

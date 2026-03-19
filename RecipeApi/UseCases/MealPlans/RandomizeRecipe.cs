@@ -12,8 +12,8 @@ public class RandomizeRecipe(AppDbContext db)
         var mealPlan = await db.MealPlans.FindAsync(new object[] { dto.MealPlanId }, ct);
         if (mealPlan is null) throw new InvalidOperationException("Meal plan does not exist.");
 
-        // Build query with constraints
-        var query = db.Recipes.AsNoTracking().Where(r => r.UserId == mealPlan.UserId);
+        // Build query with constraints — include recipes owned by user OR public recipes
+        var query = db.Recipes.AsNoTracking().Where(r => r.UserId == mealPlan.UserId || r.IsPublic);
 
         if (!string.IsNullOrWhiteSpace(dto.HealthRatingConstraint))
         {
