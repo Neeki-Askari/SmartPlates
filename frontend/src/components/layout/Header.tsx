@@ -59,7 +59,9 @@ export const Header: React.FC = () => {
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center">
                 <img src={logo} alt="SmartPlates" className="h-13 w-auto " />
-                <h3 className="text-2xl font-bold bottom mt-5">SmartPlates</h3>
+                <h3 className="text-2xl font-bold bottom mt-5">
+                  <span className="text-primary-600">Smart</span>Plates
+                </h3>
               </Link>
             </div>
 

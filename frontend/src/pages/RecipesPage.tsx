@@ -181,7 +181,13 @@ export const RecipesPage = () => {
         <p className="text-neutral-600">
           {recipes.length} recipe{recipes.length !== 1 ? 's' : ''} found
         </p>
-        <Button onClick={() => setShowForm(true)}>+ Add New Recipe</Button>
+        <Button
+          onClick={() => setShowForm(true)}
+          disabled={!isAuthenticated}
+          title={!isAuthenticated ? 'Log in to add a recipe' : undefined}
+        >
+          + Add New Recipe
+        </Button>
       </div>
 
       {/* Recipe grid */}
@@ -196,7 +202,13 @@ export const RecipesPage = () => {
       ) : recipes.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-neutral-600 mb-4">No recipes found. Start by adding your first recipe!</p>
-          <Button onClick={() => setShowForm(true)}>+ Add New Recipe</Button>
+          <Button
+            onClick={() => setShowForm(true)}
+            disabled={!isAuthenticated}
+            title={!isAuthenticated ? 'Log in to add a recipe' : undefined}
+          >
+            + Add New Recipe
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
