@@ -1,4 +1,8 @@
-# Meal Plan App
+<p align="center">
+  <img src="frontend/src/assets/logo-transparent.png" alt="Meal Plan App logo" width="180" />
+</p>
+
+<h1 align="center">Meal Plan App</h1>
 
 A full-stack meal planning application for managing recipes, building weekly meal plans, and auto-generating shopping lists. Supports per-user recipe libraries, recipe sharing, and Auth0-based authentication.
 

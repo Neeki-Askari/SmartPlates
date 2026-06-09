@@ -23,4 +23,17 @@ public static class HttpContextExtensions
 
         return user == Guid.Empty ? null : user;
     }
+
+    // Ownership lookups. Each returns the owning user's id, or null when the resource does not exist.
+    public static Task<Guid?> GetRecipeOwnerAsync(this AppDbContext db, Guid recipeId, CancellationToken ct = default)
+        => db.Recipes.Where(r => r.Id == recipeId).Select(r => (Guid?)r.UserId).FirstOrDefaultAsync(ct);
+
+    public static Task<Guid?> GetMealPlanOwnerAsync(this AppDbContext db, Guid mealPlanId, CancellationToken ct = default)
+        => db.MealPlans.Where(m => m.Id == mealPlanId).Select(m => (Guid?)m.UserId).FirstOrDefaultAsync(ct);
+
+    public static Task<Guid?> GetSavedShoppingListOwnerAsync(this AppDbContext db, Guid id, CancellationToken ct = default)
+        => db.SavedShoppingLists.Where(s => s.Id == id).Select(s => (Guid?)s.UserId).FirstOrDefaultAsync(ct);
+
+    public static Task<Guid?> GetIngredientOwnerAsync(this AppDbContext db, Guid ingredientId, CancellationToken ct = default)
+        => db.Ingredients.Where(i => i.Id == ingredientId).Select(i => (Guid?)i.Recipe.UserId).FirstOrDefaultAsync(ct);
 }

@@ -334,12 +334,12 @@ app.MapPost("/api/auth/{provider}/callback", async (string provider, OAuthCallba
     }
 });
 
-// ===== USERS =====
+// ===== USERS ===== (Protected - Requires Authentication)
 app.MapGet("/api/users/{id:guid}", async (Guid id, GetUser uc, CancellationToken ct) =>
 {
     var u = await uc.Execute(id, ct);
     return u is null ? Results.NotFound() : Results.Ok(u);
-});
+}).RequireAuthorization();
 
 app.MapPost("/api/users", async (CreateUserDto dto, CreateUser uc, CancellationToken ct) =>
 {
@@ -347,21 +347,29 @@ app.MapPost("/api/users", async (CreateUserDto dto, CreateUser uc, CancellationT
         return Results.BadRequest("Email and DisplayName are required.");
     var created = await uc.Execute(dto, ct);
     return Results.Created($"/api/users/{created.Id}", created);
-});
+}).RequireAuthorization();
 
-app.MapPut("/api/users/{id:guid}", async (Guid id, UpdateUserDto dto, UpdateUser uc, CancellationToken ct) =>
+app.MapPut("/api/users/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, UpdateUserDto dto, UpdateUser uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    if (userId != id) return Results.Forbid();
+
     if (string.IsNullOrWhiteSpace(dto.DisplayName))
         return Results.BadRequest("DisplayName is required.");
     var updated = await uc.Execute(id, dto, ct);
     return updated is null ? Results.NotFound() : Results.Ok(updated);
-});
+}).RequireAuthorization();
 
-app.MapDelete("/api/users/{id:guid}", async (Guid id, DeleteUser uc, CancellationToken ct) =>
+app.MapDelete("/api/users/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, DeleteUser uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    if (userId != id) return Results.Forbid();
+
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
-});
+}).RequireAuthorization();
 
 // ===== RECIPES =====
 
@@ -378,10 +386,19 @@ app.MapGet("/api/recipes", async (
     return Results.Ok(result);
 });
 
-app.MapGet("/api/recipes/{id:guid}", async (Guid id, GetRecipe uc, CancellationToken ct) =>
+app.MapGet("/api/recipes/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, GetRecipe uc, CancellationToken ct) =>
 {
     var r = await uc.Execute(id, ct);
-    return r is null ? Results.NotFound() : Results.Ok(r);
+    if (r is null) return Results.NotFound();
+
+    // Private recipes are only visible to their owner. Return NotFound (not Forbid) so we don't reveal existence.
+    if (!r.IsPublic)
+    {
+        var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+        if (userId != r.UserId) return Results.NotFound();
+    }
+
+    return Results.Ok(r);
 });
 app.MapPost("/api/recipes", async (
     HttpContext httpContext,
@@ -401,19 +418,31 @@ app.MapPost("/api/recipes", async (
 }).RequireAuthorization();
 
 
-app.MapPut("/api/recipes/{id:guid}", async (Guid id, UpdateRecipeDto dto, UpdateRecipe uc, CancellationToken ct) =>
+app.MapPut("/api/recipes/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, UpdateRecipeDto dto, UpdateRecipe uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetRecipeOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     if (string.IsNullOrWhiteSpace(dto.Title))
         return Results.BadRequest("Title is required.");
     var updated = await uc.Execute(id, dto, ct);
     return updated is null ? Results.NotFound() : Results.Ok(updated);
-});
+}).RequireAuthorization();
 
-app.MapDelete("/api/recipes/{id:guid}", async (Guid id, DeleteRecipe uc, CancellationToken ct) =>
+app.MapDelete("/api/recipes/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, DeleteRecipe uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetRecipeOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
-});
+}).RequireAuthorization();
 
 app.MapPost("/api/recipes/{id:guid}/copy", async (
     Guid id,
@@ -439,24 +468,30 @@ app.MapPost("/api/recipes/{id:guid}/copy", async (
     }
 }).RequireAuthorization();
 
-// ===== INGREDIENTS =====
+// ===== INGREDIENTS ===== (Protected - Requires Authentication)
 app.MapGet("/api/ingredients/{id:guid}", async (Guid id, GetIngredient uc, CancellationToken ct) =>
 {
     var ing = await uc.Execute(id, ct);
     return ing is null ? Results.NotFound() : Results.Ok(ing);
-});
+}).RequireAuthorization();
 
 app.MapGet("/api/ingredients/by-recipe/{recipeId:guid}", async (Guid recipeId, ListIngredientsByRecipe uc, CancellationToken ct) =>
 {
     var list = await uc.Execute(recipeId, ct);
     return Results.Ok(list);
-});
+}).RequireAuthorization();
 
-app.MapDelete("/api/ingredients/{id:guid}", async (Guid id, DeleteIngredient uc, CancellationToken ct) =>
+app.MapDelete("/api/ingredients/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, DeleteIngredient uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetIngredientOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
-});
+}).RequireAuthorization();
 
 // ===== MEAL PLANS ===== (Protected - Requires Authentication)
 app.MapPost("/api/mealplans", async (HttpContext httpContext, AppDbContext db, CreateMealPlanDto dto, CreateMealPlan uc, CancellationToken ct) =>
@@ -477,8 +512,14 @@ app.MapPost("/api/mealplans", async (HttpContext httpContext, AppDbContext db, C
     return Results.Created($"/api/mealplans/{created.Id}", created);
 }).RequireAuthorization();
 
-app.MapGet("/api/mealplans/{id:guid}", async (Guid id, GetMealPlan uc, CancellationToken ct) =>
+app.MapGet("/api/mealplans/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, GetMealPlan uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var mp = await uc.Execute(id, ct);
     return mp is null ? Results.NotFound() : Results.Ok(mp);
 }).RequireAuthorization();
@@ -492,64 +533,120 @@ app.MapGet("/api/mealplans", async (HttpContext httpContext, AppDbContext db, Ge
     return Results.Ok(mealPlans);
 }).RequireAuthorization();
 
-app.MapPut("/api/mealplans/{id:guid}", async (Guid id, UpdateMealPlanDto dto, UpdateMealPlan uc, CancellationToken ct) =>
+app.MapPut("/api/mealplans/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, UpdateMealPlanDto dto, UpdateMealPlan uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var updated = await uc.Execute(id, dto, ct);
     return updated is null ? Results.NotFound() : Results.Ok(updated);
 }).RequireAuthorization();
 
-app.MapDelete("/api/mealplans/{id:guid}", async (Guid id, DeleteMealPlan uc, CancellationToken ct) =>
+app.MapDelete("/api/mealplans/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, DeleteMealPlan uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
 }).RequireAuthorization();
 
-app.MapPost("/api/mealplans/duplicate", async (DuplicateMealPlanDto dto, DuplicateMealPlan uc, CancellationToken ct) =>
+app.MapPost("/api/mealplans/duplicate", async (HttpContext httpContext, AppDbContext db, DuplicateMealPlanDto dto, DuplicateMealPlan uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(dto.SourceMealPlanId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var duplicated = await uc.Execute(dto, ct);
     return Results.Created($"/api/mealplans/{duplicated.Id}", duplicated);
 }).RequireAuthorization();
 
-app.MapPost("/api/mealplans/add-recipe", async (AddRecipeToMealPlanDto dto, AddRecipeToMealPlan uc, CancellationToken ct) =>
+app.MapPost("/api/mealplans/add-recipe", async (HttpContext httpContext, AppDbContext db, AddRecipeToMealPlanDto dto, AddRecipeToMealPlan uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(dto.MealPlanId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var result = await uc.Execute(dto, ct);
     return Results.Ok(result);
 }).RequireAuthorization();
 
-app.MapPost("/api/mealplans/randomize", async (RandomizeRecipeDto dto, RandomizeRecipe uc, CancellationToken ct) =>
+app.MapPost("/api/mealplans/randomize", async (HttpContext httpContext, AppDbContext db, RandomizeRecipeDto dto, RandomizeRecipe uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(dto.MealPlanId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var options = await uc.Execute(dto, ct);
     return Results.Ok(options);
 }).RequireAuthorization();
 
-app.MapGet("/api/mealplans/{id:guid}/shopping-list", async (Guid id, GenerateShoppingList uc, CancellationToken ct) =>
+app.MapGet("/api/mealplans/{id:guid}/shopping-list", async (Guid id, HttpContext httpContext, AppDbContext db, GenerateShoppingList uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var shoppingList = await uc.Execute(id, ct);
     return Results.Ok(shoppingList);
 }).RequireAuthorization();
 
-// ===== RECIPE SEARCH & SHARING =====
-app.MapPost("/api/recipes/search-by-ingredients", async (SearchRecipesByIngredientsDto dto, SearchRecipesByIngredients uc, CancellationToken ct) =>
+// ===== RECIPE SEARCH & SHARING ===== (Protected - Requires Authentication)
+app.MapPost("/api/recipes/search-by-ingredients", async (HttpContext httpContext, AppDbContext db, SearchRecipesByIngredientsDto dto, SearchRecipesByIngredients uc, CancellationToken ct) =>
 {
-    var results = await uc.Execute(dto, ct);
-    return Results.Ok(results);
-});
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
 
-app.MapPost("/api/recipes/share", async (ShareRecipeDto dto, ShareRecipe uc, CancellationToken ct) =>
+    // Force the search to the caller's own recipes regardless of the body.
+    var results = await uc.Execute(dto with { UserId = userId.Value }, ct);
+    return Results.Ok(results);
+}).RequireAuthorization();
+
+app.MapPost("/api/recipes/share", async (HttpContext httpContext, AppDbContext db, ShareRecipeDto dto, ShareRecipe uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetRecipeOwnerAsync(dto.RecipeId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var shared = await uc.Execute(dto, ct);
     return Results.Ok(shared);
-});
+}).RequireAuthorization();
 
-app.MapGet("/api/users/{userId:guid}/shared-recipes", async (Guid userId, GetSharedRecipes uc, CancellationToken ct) =>
+app.MapGet("/api/users/{userId:guid}/shared-recipes", async (Guid userId, HttpContext httpContext, AppDbContext db, GetSharedRecipes uc, CancellationToken ct) =>
 {
+    var currentUserId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (currentUserId is null) return Results.Unauthorized();
+    if (currentUserId != userId) return Results.Forbid();
+
     var shared = await uc.Execute(userId, ct);
     return Results.Ok(shared);
-});
+}).RequireAuthorization();
 
 // ===== SAVED SHOPPING LISTS ===== (Protected - Requires Authentication)
-app.MapPost("/api/shopping-lists/save", async (ShoppingListDto dto, SaveShoppingList uc, CancellationToken ct) =>
+app.MapPost("/api/shopping-lists/save", async (HttpContext httpContext, AppDbContext db, ShoppingListDto dto, SaveShoppingList uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(dto.MealPlanId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var saved = await uc.Execute(dto, ct);
     return Results.Created($"/api/shopping-lists/{saved.Id}", saved);
 }).RequireAuthorization();
@@ -563,14 +660,26 @@ app.MapGet("/api/shopping-lists", async (HttpContext httpContext, AppDbContext d
     return Results.Ok(lists);
 }).RequireAuthorization();
 
-app.MapGet("/api/shopping-lists/{id:guid}", async (Guid id, GetSavedShoppingList uc, CancellationToken ct) =>
+app.MapGet("/api/shopping-lists/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, GetSavedShoppingList uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetSavedShoppingListOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var list = await uc.Execute(id, ct);
     return list is null ? Results.NotFound() : Results.Ok(list);
 }).RequireAuthorization();
 
-app.MapDelete("/api/shopping-lists/{id:guid}", async (Guid id, DeleteSavedShoppingList uc, CancellationToken ct) =>
+app.MapDelete("/api/shopping-lists/{id:guid}", async (Guid id, HttpContext httpContext, AppDbContext db, DeleteSavedShoppingList uc, CancellationToken ct) =>
 {
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetSavedShoppingListOwnerAsync(id, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
     var ok = await uc.Execute(id, ct);
     return ok ? Results.NoContent() : Results.NotFound();
 }).RequireAuthorization();
