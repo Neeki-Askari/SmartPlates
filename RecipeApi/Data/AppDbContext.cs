@@ -105,8 +105,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(x => x.HealthRatingConstraint).HasMaxLength(100);
             b.Property(x => x.CuisineTypeConstraint).HasMaxLength(100);
 
-            // Composite index to prevent duplicate meal assignments
-            b.HasIndex(x => new { x.MealPlanId, x.DayOfWeek, x.MealType }).IsUnique();
+            // Composite index for fast slot lookups (multiple recipes per slot allowed)
+            b.HasIndex(x => new { x.MealPlanId, x.DayOfWeek, x.MealType });
         });
 
         // SharedRecipe configuration

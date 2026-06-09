@@ -1,16 +1,23 @@
 import { MealSlot } from './MealSlot';
-import { Card, CardContent } from '../../ui';
-import type { MealPlanWithRecipes, MealType, Recipe } from '../../../types';
+import { Button, Card, CardContent } from '../../ui';
+import type { MealPlanRecipe, MealPlanWithRecipes, MealType, Recipe } from '../../../types';
 import { MealTypeLabels, DAYS_OF_WEEK } from '../../../types';
-import { useAddRecipeToMealPlan, useRandomizeRecipe } from '../../../hooks/useMealPlans.query';
+import {
+  useAddRecipeToMealPlan,
+  useRandomizeRecipe,
+  useRemoveRecipeFromMealPlan,
+} from '../../../hooks/useMealPlans.query';
 
 interface MealPlanWeekViewProps {
   mealPlan: MealPlanWithRecipes;
+  onEdit?: () => void;
+  onDuplicate?: () => void;
 }
 
-export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
+export const MealPlanWeekView = ({ mealPlan, onEdit, onDuplicate }: MealPlanWeekViewProps) => {
   const addRecipeMutation = useAddRecipeToMealPlan();
   const randomizeMutation = useRandomizeRecipe();
+  const removeRecipeMutation = useRemoveRecipeFromMealPlan();
 
   // Determine which meal types are active
   const activeMealTypes: MealType[] = [];
@@ -21,12 +28,21 @@ export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
   if (mealPlan.includesDinner) activeMealTypes.push(4); // Dinner
   if (mealPlan.includesSnack3) activeMealTypes.push(5); // Snack3
 
-  // Get recipe for a specific day and meal type
-  const getRecipeForSlot = (dayOfWeek: number, mealType: MealType): Recipe | undefined => {
-    const mealPlanRecipe = mealPlan.mealPlanRecipes?.find(
-      (mpr) => mpr.dayOfWeek === dayOfWeek && mpr.mealType === mealType
+  // Get all recipes assigned to a specific day and meal type
+  const getRecipesForSlot = (dayOfWeek: number, mealType: MealType): MealPlanRecipe[] => {
+    return (
+      mealPlan.mealPlanRecipes?.filter(
+        (mpr) => mpr.dayOfWeek === dayOfWeek && mpr.mealType === mealType
+      ) ?? []
     );
-    return mealPlanRecipe?.recipe;
+  };
+
+  // Handle removing a single recipe entry from a slot
+  const handleRemoveRecipe = async (mealPlanRecipeId: string) => {
+    await removeRecipeMutation.mutateAsync({
+      mealPlanId: mealPlan.id,
+      mealPlanRecipeId,
+    });
   };
 
   // Handle randomize
@@ -77,9 +93,25 @@ export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
                 {new Date(mealPlan.endDate).toLocaleDateString()}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-neutral-600">Serving Size</p>
-              <p className="text-2xl font-bold text-primary-600">{mealPlan.servingSize}</p>
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-sm text-neutral-600">Serving Size</p>
+                <p className="text-2xl font-bold text-primary-600">{mealPlan.servingSize}</p>
+              </div>
+              {(onDuplicate || onEdit) && (
+                <div className="flex gap-2">
+                  {onDuplicate && (
+                    <Button variant="secondary" size="sm" onClick={onDuplicate}>
+                      Duplicate
+                    </Button>
+                  )}
+                  {onEdit && (
+                    <Button variant="secondary" size="sm" onClick={onEdit}>
+                      Edit Details
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -114,13 +146,14 @@ export const MealPlanWeekView = ({ mealPlan }: MealPlanWeekViewProps) => {
                     dayOfWeek={dayOfWeek}
                     mealType={mealType}
                     mealPlanId={mealPlan.id}
-                    currentRecipe={getRecipeForSlot(dayOfWeek, mealType)}
+                    recipes={getRecipesForSlot(dayOfWeek, mealType)}
                     onRandomize={(health, cuisine, exclude, count) =>
                       handleRandomize(dayOfWeek, mealType, health, cuisine, exclude, count)
                     }
                     onSelectRecipe={(recipe) =>
                       handleSelectRecipe(dayOfWeek, mealType, recipe)
                     }
+                    onRemoveRecipe={handleRemoveRecipe}
                   />
                 </div>
               ))}

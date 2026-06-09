@@ -72,6 +72,31 @@ export const useAddRecipeToMealPlan = () => {
   });
 };
 
+// Remove recipe from meal plan mutation
+export const useRemoveRecipeFromMealPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      mealPlanId,
+      mealPlanRecipeId,
+    }: {
+      mealPlanId: string;
+      mealPlanRecipeId: string;
+    }) => {
+      return await mealPlanApi.removeRecipeFromMealPlan(mealPlanId, mealPlanRecipeId);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: mealPlanKeys.detail(variables.mealPlanId),
+      });
+    },
+    onError: (error: unknown) => {
+      throw new Error(handleApiError(error));
+    },
+  });
+};
+
 // Randomize recipe options mutation
 export const useRandomizeRecipe = () => {
   return useMutation({

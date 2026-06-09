@@ -5,14 +5,14 @@ import { RecipeDetail } from '../recipes/RecipeDetail';
 import { RecipeForm } from '../recipes/RecipeForm';
 import { useRecipe, useUpdateRecipe } from '../../../hooks/useRecipes.query';
 import { useUser } from '../../../contexts/UserContext';
-import type { MealType, Recipe } from '../../../types';
+import type { MealPlanRecipe, MealType, Recipe } from '../../../types';
 import { CUISINE_TYPES, HEALTH_RATINGS } from '../../../types';
 
 interface MealSlotProps {
   dayOfWeek: number;
   mealType: MealType;
   mealPlanId: string;
-  currentRecipe?: Recipe;
+  recipes: MealPlanRecipe[];
   onRandomize: (
     healthRating?: string,
     cuisineType?: string,
@@ -20,14 +20,14 @@ interface MealSlotProps {
     optionCount?: number
   ) => Promise<Recipe[]>;
   onSelectRecipe: (recipe: Recipe) => void;
+  onRemoveRecipe: (mealPlanRecipeId: string) => void;
 }
 
 export const MealSlot = ({
-  dayOfWeek,
-  mealType,
-  currentRecipe,
+  recipes,
   onRandomize,
   onSelectRecipe,
+  onRemoveRecipe,
 }: MealSlotProps) => {
   const [healthRating, setHealthRating] = useState<string>('');
   const [cuisineType, setCuisineType] = useState<string>('');
@@ -38,11 +38,12 @@ export const MealSlot = ({
   const [showManualSelector, setShowManualSelector] = useState(false);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [showRandomizeModal, setShowRandomizeModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [detailRecipeId, setDetailRecipeId] = useState<string | null>(null);
+  const [editRecipeId, setEditRecipeId] = useState<string | null>(null);
 
   const { user } = useUser();
-  const { data: fullRecipe } = useRecipe(showDetailModal || showEditModal ? (currentRecipe?.id ?? null) : null);
+  const { data: detailRecipe } = useRecipe(detailRecipeId);
+  const { data: editRecipe } = useRecipe(editRecipeId);
   const updateRecipeMutation = useUpdateRecipe();
 
   const handleRandomize = async () => {
@@ -53,14 +54,14 @@ export const MealSlot = ({
         .map((i) => i.trim())
         .filter((i) => i.length > 0);
 
-      const recipes = await onRandomize(
+      const result = await onRandomize(
         healthRating || undefined,
         cuisineType || undefined,
         excludedList.length > 0 ? excludedList : undefined,
         optionCount
       );
 
-      setOptions(recipes);
+      setOptions(result);
       setShowOptions(true);
     } catch (error) {
       console.error('Error randomizing recipe:', error);
@@ -81,59 +82,56 @@ export const MealSlot = ({
     setShowManualSelector(false);
   };
 
-  const handleClearRecipe = () => {
-    setShowOptions(false);
-    setOptions([]);
-  };
-
   return (
     <>
       <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-2">
-          {/* Current Recipe Display */}
-          {currentRecipe ? (
-            <div className="mb-2">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <h4
-                    className="font-semibold text-primary-600 text-sm leading-snug cursor-pointer hover:underline"
-                    onClick={() => setShowDetailModal(true)}
-                  >
-                    {currentRecipe.title}
-                  </h4>
-                  {currentRecipe.description && (
-                    <p className="text-xs text-neutral-600 mt-1 line-clamp-2">
-                      {currentRecipe.description}
-                    </p>
-                  )}
-                  <div className="flex gap-1 mt-1.5 flex-wrap">
-                    {currentRecipe.cuisineType && (
-                      <span className="text-xs px-1 py-0.5 bg-blue-100 text-blue-700 rounded leading-tight">
-                        {currentRecipe.cuisineType}
-                      </span>
-                    )}
-                    {currentRecipe.healthRating && (
-                      <span className="text-xs px-1 py-0.5 bg-green-100 text-green-700 rounded leading-tight">
-                        {currentRecipe.healthRating}
-                      </span>
-                    )}
+          {/* Assigned Recipes */}
+          {recipes.length > 0 ? (
+            <div className="space-y-1.5 mb-2">
+              {recipes.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="bg-neutral-50 rounded-md p-1.5 border border-neutral-200"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h4
+                        className="font-semibold text-primary-600 text-sm leading-snug cursor-pointer hover:underline"
+                        onClick={() => setDetailRecipeId(entry.recipe.id)}
+                      >
+                        {entry.recipe.title}
+                      </h4>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {entry.recipe.cuisineType && (
+                          <span className="text-xs px-1 py-0.5 bg-blue-100 text-blue-700 rounded leading-tight">
+                            {entry.recipe.cuisineType}
+                          </span>
+                        )}
+                        {entry.recipe.healthRating && (
+                          <span className="text-xs px-1 py-0.5 bg-green-100 text-green-700 rounded leading-tight">
+                            {entry.recipe.healthRating}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onRemoveRecipe(entry.id)}
+                      className="ml-1.5 text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+                      title="Remove recipe"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={handleClearRecipe}
-                  className="ml-2 text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
-                  title="Clear recipe"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="mb-2 text-center py-2 bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-300">
@@ -149,7 +147,7 @@ export const MealSlot = ({
               variant="secondary"
               fullWidth
             >
-              Choose Recipe
+              + Add Recipe
             </Button>
             <Button
               onClick={() => { setShowOptions(false); setOptions([]); setShowRandomizeModal(true); }}
@@ -238,7 +236,7 @@ export const MealSlot = ({
 
           {showOptions && options.length > 0 && (
             <div className="border-t border-neutral-200 pt-4">
-              <p className="text-sm font-medium text-neutral-700 mb-3">Pick a recipe:</p>
+              <p className="text-sm font-medium text-neutral-700 mb-3">Pick a recipe to add:</p>
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {options.map((recipe) => (
                   <button
@@ -276,25 +274,29 @@ export const MealSlot = ({
 
       {/* Recipe Detail Modal */}
       <RecipeDetail
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        recipe={fullRecipe ?? null}
+        isOpen={detailRecipeId !== null}
+        onClose={() => setDetailRecipeId(null)}
+        recipe={detailRecipe ?? null}
         currentUserId={user?.id}
-        onEdit={fullRecipe?.userId === user?.id ? () => { setShowDetailModal(false); setShowEditModal(true); } : undefined}
+        onEdit={
+          detailRecipe?.userId === user?.id
+            ? () => { setEditRecipeId(detailRecipe?.id ?? null); setDetailRecipeId(null); }
+            : undefined
+        }
       />
 
       {/* Edit Recipe Form Modal */}
       <RecipeForm
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        isOpen={editRecipeId !== null}
+        onClose={() => setEditRecipeId(null)}
         onSubmit={async (data) => {
-          if (fullRecipe) {
-            await updateRecipeMutation.mutateAsync({ id: fullRecipe.id, data });
-            setShowEditModal(false);
+          if (editRecipe) {
+            await updateRecipeMutation.mutateAsync({ id: editRecipe.id, data });
+            setEditRecipeId(null);
           }
         }}
         userId={user?.id}
-        recipe={fullRecipe}
+        recipe={editRecipe}
       />
 
       {/* Recipe Selector Modal */}
@@ -302,7 +304,7 @@ export const MealSlot = ({
         isOpen={showManualSelector}
         onClose={() => setShowManualSelector(false)}
         onSelect={handleManualSelect}
-        title="Select a Recipe"
+        title="Add a Recipe"
       />
     </>
   );

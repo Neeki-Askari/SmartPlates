@@ -126,6 +126,7 @@ builder.Services.AddScoped<UpdateMealPlan>();
 builder.Services.AddScoped<DeleteMealPlan>();
 builder.Services.AddScoped<DuplicateMealPlan>();
 builder.Services.AddScoped<AddRecipeToMealPlan>();
+builder.Services.AddScoped<RemoveRecipeFromMealPlan>();
 builder.Services.AddScoped<RandomizeRecipe>();
 builder.Services.AddScoped<GenerateShoppingList>();
 
@@ -579,6 +580,18 @@ app.MapPost("/api/mealplans/add-recipe", async (HttpContext httpContext, AppDbCo
 
     var result = await uc.Execute(dto, ct);
     return Results.Ok(result);
+}).RequireAuthorization();
+
+app.MapDelete("/api/mealplans/{mealPlanId:guid}/recipe/{mealPlanRecipeId:guid}", async (Guid mealPlanId, Guid mealPlanRecipeId, HttpContext httpContext, AppDbContext db, RemoveRecipeFromMealPlan uc, CancellationToken ct) =>
+{
+    var userId = await httpContext.GetCurrentUserIdAsync(db, ct);
+    if (userId is null) return Results.Unauthorized();
+    var ownerId = await db.GetMealPlanOwnerAsync(mealPlanId, ct);
+    if (ownerId is null) return Results.NotFound();
+    if (ownerId != userId) return Results.Forbid();
+
+    var removed = await uc.Execute(mealPlanId, mealPlanRecipeId, ct);
+    return removed ? Results.NoContent() : Results.NotFound();
 }).RequireAuthorization();
 
 app.MapPost("/api/mealplans/randomize", async (HttpContext httpContext, AppDbContext db, RandomizeRecipeDto dto, RandomizeRecipe uc, CancellationToken ct) =>

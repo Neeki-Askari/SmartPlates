@@ -159,6 +159,9 @@ export const mealPlanApi = {
       .post<MealPlanRecipe>("/mealplans/add-recipe", data)
       .then((res) => res.data),
 
+  removeRecipeFromMealPlan: (mealPlanId: string, mealPlanRecipeId: string) =>
+    api.delete(`/mealplans/${mealPlanId}/recipe/${mealPlanRecipeId}`),
+
   randomizeRecipe: (data: RandomizeRecipeDto) =>
     api.post<Recipe[]>("/mealplans/randomize", data).then((res) => res.data),
 

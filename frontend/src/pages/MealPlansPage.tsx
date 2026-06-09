@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container } from '../components/layout/Container';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '../components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Modal, ModalFooter } from '../components/ui';
 import { MealPlanForm } from '../components/features/mealplans/MealPlanForm';
 import { MealPlanWeekView } from '../components/features/mealplans/MealPlanWeekView';
 import { ShoppingListView } from '../components/features/mealplans/ShoppingListView';
@@ -18,6 +18,7 @@ export const MealPlansPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [showEditMealPlan, setShowEditMealPlan] = useState(false);
   const [showDuplicateMealPlan, setShowDuplicateMealPlan] = useState(false);
+  const [mealPlanToDelete, setMealPlanToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const { user } = useUser();
   const userId = user?.id ?? '';
@@ -30,6 +31,7 @@ export const MealPlansPage = () => {
       setShowForm(false);
       setShowEditMealPlan(false);
       setShowDuplicateMealPlan(false);
+      setMealPlanToDelete(null);
     }
   }, [location.pathname]);
 
@@ -70,14 +72,15 @@ export const MealPlansPage = () => {
     setShowForm(false);
   };
 
-  const handleDeleteMealPlan = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this meal plan?')) return;
+  const handleConfirmDeleteMealPlan = async () => {
+    if (!mealPlanToDelete) return;
 
     try {
-      await deleteMealPlanMutation.mutateAsync(id);
-      if (currentMealPlanId === id) {
+      await deleteMealPlanMutation.mutateAsync(mealPlanToDelete.id);
+      if (currentMealPlanId === mealPlanToDelete.id) {
         setCurrentMealPlanId(null);
       }
+      setMealPlanToDelete(null);
     } catch (error) {
       console.error('Error deleting meal plan:', error);
     }
@@ -108,38 +111,6 @@ export const MealPlansPage = () => {
   if (currentMealPlanId && mealPlan && !showShoppingList) {
     return (
       <Container maxWidth="full">
-        {/* Meal Plan Info Header */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-neutral-900 mb-2">{mealPlan.name}</h2>
-                <div className="flex gap-6 text-sm text-neutral-600">
-                  <div>
-                    <span className="font-medium">Date Range:</span>{' '}
-                    {new Date(mealPlan.startDate).toLocaleDateString()} -{' '}
-                    {new Date(mealPlan.endDate).toLocaleDateString()}
-                  </div>
-                  <div>
-                    <span className="font-medium">Serving Size:</span> {mealPlan.servingSize} people
-                  </div>
-                  <div>
-                    <span className="font-medium">Recipes:</span> {mealPlan.mealPlanRecipes?.length || 0}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setShowDuplicateMealPlan(true)}>
-                  Duplicate
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => setShowEditMealPlan(true)}>
-                  Edit Details
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Action Buttons */}
         <div className="mb-6 flex justify-between items-center">
           <Button variant="secondary" onClick={() => setCurrentMealPlanId(null)}>
@@ -155,7 +126,11 @@ export const MealPlansPage = () => {
           </div>
         </div>
 
-        <MealPlanWeekView mealPlan={mealPlan} />
+        <MealPlanWeekView
+          mealPlan={mealPlan}
+          onEdit={() => setShowEditMealPlan(true)}
+          onDuplicate={() => setShowDuplicateMealPlan(true)}
+        />
 
         {/* Edit Meal Plan Modal */}
         <MealPlanEditModal
@@ -304,7 +279,7 @@ export const MealPlansPage = () => {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteMealPlan(plan.id);
+                      setMealPlanToDelete({ id: plan.id, name: plan.name });
                     }}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
@@ -438,6 +413,36 @@ export const MealPlansPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={mealPlanToDelete !== null}
+        onClose={() => setMealPlanToDelete(null)}
+        title="Delete Meal Plan"
+        size="sm"
+      >
+        <p className="text-neutral-600">
+          Are you sure you want to delete{' '}
+          <span className="font-semibold text-neutral-900">{mealPlanToDelete?.name}</span>? This
+          action cannot be undone.
+        </p>
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            onClick={() => setMealPlanToDelete(null)}
+            disabled={deleteMealPlanMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirmDeleteMealPlan}
+            disabled={deleteMealPlanMutation.isPending}
+          >
+            {deleteMealPlanMutation.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </Container>
   );
 };

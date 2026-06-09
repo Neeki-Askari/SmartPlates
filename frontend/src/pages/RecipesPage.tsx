@@ -224,13 +224,15 @@ export const RecipesPage = () => {
         </div>
       )}
 
-      {/* Create Recipe Form Modal */}
-      <RecipeForm
-        isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        onSubmit={handleCreateRecipe}
-        userId={userId}
-      />
+      {/* Create Recipe Form Modal — mounted only while open so it always starts blank */}
+      {showForm && (
+        <RecipeForm
+          isOpen
+          onClose={() => setShowForm(false)}
+          onSubmit={handleCreateRecipe}
+          userId={userId}
+        />
+      )}
 
       {/* Edit Recipe Form Modal */}
       <RecipeForm

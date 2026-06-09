@@ -16,48 +16,28 @@ public class AddRecipeToMealPlan(AppDbContext db)
         var recipe = await db.Recipes.FindAsync(new object[] { dto.RecipeId }, ct);
         if (recipe is null) throw new InvalidOperationException("Recipe does not exist.");
 
-        // Check if there's already a recipe for this day/meal combination
-        var existing = await db.MealPlanRecipes
-            .FirstOrDefaultAsync(mpr =>
-                mpr.MealPlanId == dto.MealPlanId &&
-                mpr.DayOfWeek == dto.DayOfWeek &&
-                mpr.MealType == dto.MealType, ct);
-
-        if (existing is not null)
+        // Multiple recipes are allowed per day/meal combination, so always add a new entry.
+        var entry = new MealPlanRecipe
         {
-            // Update existing
-            existing.RecipeId = dto.RecipeId;
-            existing.HealthRatingConstraint = dto.HealthRatingConstraint;
-            existing.CuisineTypeConstraint = dto.CuisineTypeConstraint;
-        }
-        else
-        {
-            // Create new
-            existing = new MealPlanRecipe
-            {
-                MealPlanId = dto.MealPlanId,
-                RecipeId = dto.RecipeId,
-                DayOfWeek = dto.DayOfWeek,
-                MealType = dto.MealType,
-                HealthRatingConstraint = dto.HealthRatingConstraint,
-                CuisineTypeConstraint = dto.CuisineTypeConstraint
-            };
-            db.MealPlanRecipes.Add(existing);
-        }
+            MealPlanId = dto.MealPlanId,
+            RecipeId = dto.RecipeId,
+            DayOfWeek = dto.DayOfWeek,
+            MealType = dto.MealType,
+            HealthRatingConstraint = dto.HealthRatingConstraint,
+            CuisineTypeConstraint = dto.CuisineTypeConstraint
+        };
+        db.MealPlanRecipes.Add(entry);
 
         await db.SaveChangesAsync(ct);
 
-        // Reload with recipe data
-        await db.Entry(existing).Reference(mpr => mpr.Recipe).LoadAsync(ct);
-
         return new MealPlanRecipeDto(
-            existing.Id,
-            existing.MealPlanId,
-            existing.RecipeId,
-            existing.DayOfWeek,
-            existing.MealType,
-            existing.HealthRatingConstraint,
-            existing.CuisineTypeConstraint,
+            entry.Id,
+            entry.MealPlanId,
+            entry.RecipeId,
+            entry.DayOfWeek,
+            entry.MealType,
+            entry.HealthRatingConstraint,
+            entry.CuisineTypeConstraint,
             new RecipeDto(
                 recipe.Id,
                 recipe.UserId,
